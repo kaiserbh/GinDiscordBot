@@ -217,6 +217,84 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 			}, nil
 		}
 	}
-
 	return nil, nil
+}
+
+// checks user reaction selection.
+func checkUserReactionSelect(currentTime time.Time, botMessageID string, s *discordgo.Session, m *discordgo.MessageCreate) (int, bool, error) {
+	page := 1
+	errorVal := 10
+	for {
+		timePassed := time.Since(currentTime)
+		if timePassed.Seconds() >= 30 {
+			log.WithFields(log.Fields{
+				"Time passed": timePassed,
+			}).Info("Removing reactions time has been passed.")
+			err := s.MessageReactionsRemoveAll(m.ChannelID, botMessageID)
+			if err != nil {
+				log.Error("Failed to remove all reaction from botMessage: ", err)
+				return errorVal, true, err
+			}
+			previousAuthor = ""
+			return 0, true, err
+		}
+		// check if the reaction matches the author ID aka sender
+		checkReaction, err := checkMessageReaction(s, m, botMessageID)
+		if err != nil {
+			log.Error("Failed to check emoji from bot message:", err)
+			return errorVal, true, err
+		}
+		// if true then remove it uwu.
+		if checkReaction["Stop"] {
+			err = s.MessageReactionsRemoveAll(m.ChannelID, botMessageID)
+			if err != nil {
+				log.Error("Failed to remove all reaction from bot message stop reaction.", err)
+				return 0, true, err
+			}
+			previousAuthor = ""
+			return errorVal, true, err
+		} else if checkReaction["FastBack"] {
+			page = 0
+			// remove user reaction before going to next page.
+			err = s.MessageReactionRemove(m.ChannelID, botMessageID, "⏮️", m.Author.ID)
+			if err != nil {
+				log.Error("Failed to remove user reaction from bot message:", err)
+				return errorVal, true, err
+			}
+			return page, false, nil
+		} else if checkReaction["Back"] {
+			if page == 1 {
+				log.Info("Already on page one not doing anything")
+				// remove user reaction before going to next page.
+				err = s.MessageReactionRemove(m.ChannelID, botMessageID, "◀️", m.Author.ID)
+				if err != nil {
+					log.Error("Failed to remove user reaction from bot message: ", err)
+					return errorVal, true, err
+				}
+			}
+			page -= 1
+			return page, false, nil
+		} else if checkReaction["Forward"] {
+			if page == 5 {
+				log.Info("Last Page already not doing anything")
+				// remove user reaction before going to next page.
+			}
+			err = s.MessageReactionRemove(m.ChannelID, botMessageID, "▶️", m.Author.ID)
+			if err != nil {
+				log.Error("Failed to remove user reaction from bot message: ", err)
+				return errorVal, true, err
+			}
+			page += 1
+			return page, false, nil
+		} else if checkReaction["FastForward"] {
+			page = 5
+			// remove user reaction before going to next page.
+			err = s.MessageReactionRemove(m.ChannelID, botMessageID, "⏭️", m.Author.ID)
+			if err != nil {
+				log.Error("Failed to remove user reaction from bot message: ", err)
+				return errorVal, true, err
+			}
+			return page, false, nil
+		}
+	}
 }
