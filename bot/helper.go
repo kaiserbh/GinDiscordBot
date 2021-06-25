@@ -25,15 +25,6 @@ func checkPrefix(message string) bool {
 	return true
 }
 
-func sendEmbed(name, value string, inline bool) discordgo.MessageEmbedField {
-	embedField := discordgo.MessageEmbedField{
-		Name:   name,
-		Value:  value,
-		Inline: inline,
-	}
-	return embedField
-}
-
 // MemberHasPermission checks if a member has the given permission
 // for example, If you would like to check if user has the administrator
 // permission you would use
@@ -84,4 +75,148 @@ func checkAllowedChannel(id string, settings *model.GuildSettings) bool {
 		}
 	}
 	return false
+}
+
+// gets bot last message ID from the channel.
+func getBotMessageID(session *discordgo.Session, msgEvent *discordgo.MessageCreate) (string, error) {
+	// add bot last message to the array after the author ID.
+	channelMessages, err := session.ChannelMessages(msgEvent.ChannelID, 1, "", msgEvent.Message.ID, "")
+	if err != nil {
+		log.Error("Failed to get messages from channel")
+		return "", err
+	}
+	botMessageID := channelMessages[0].ID
+
+	return botMessageID, nil
+}
+
+// check skip backward reaction
+func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.MessageCreate, botMessageID string) (map[string]bool, error) {
+	checkReaction, err := session.MessageReactions(msgEvent.ChannelID, botMessageID, "⏮️", 10, botMessageID, "")
+	if err != nil {
+		log.Error("Failed to get message Reactions")
+		return map[string]bool{
+			"FastBack":     false,
+			"Back":         false,
+			"Stop":         false,
+			"Forward":      false,
+			"Fast forward": false,
+		}, err
+	}
+
+	// Check skip back reaction
+	for _, reactions := range checkReaction {
+		if reactions.ID == msgEvent.Author.ID {
+			return map[string]bool{
+				"FastBack":    true,
+				"Back":        false,
+				"Stop":        false,
+				"Forward":     false,
+				"FastForward": false,
+			}, nil
+		}
+	}
+	// Check back reaction
+	checkReaction, err = session.MessageReactions(msgEvent.ChannelID, botMessageID, "◀️", 10, botMessageID, "")
+	if err != nil {
+		log.Error("Failed to get message Reactions")
+		return map[string]bool{
+			"FastBack":     false,
+			"Back":         false,
+			"Stop":         false,
+			"Forward":      false,
+			"Fast forward": false,
+		}, err
+	}
+
+	// Check back reaction
+	for _, reactions := range checkReaction {
+		if reactions.ID == msgEvent.Author.ID {
+			return map[string]bool{
+				"FastBack":     false,
+				"Back":         true,
+				"Stop":         false,
+				"Forward":      false,
+				"Fast forward": false,
+			}, nil
+		}
+	}
+
+	// Check stop reaction
+	checkReaction, err = session.MessageReactions(msgEvent.ChannelID, botMessageID, "⏹️", 10, botMessageID, "")
+	if err != nil {
+		log.Error("Failed to get message Reactions")
+		return map[string]bool{
+			"FastBack":     false,
+			"Back":         false,
+			"Stop":         false,
+			"Forward":      false,
+			"Fast forward": false,
+		}, err
+	}
+
+	// Check stop reaction l
+	for _, reactions := range checkReaction {
+		if reactions.ID == msgEvent.Author.ID {
+			return map[string]bool{
+				"FastBack":     false,
+				"Back":         false,
+				"Stop":         true,
+				"Forward":      false,
+				"Fast forward": false,
+			}, nil
+		}
+	}
+	// Check forward reaction
+	checkReaction, err = session.MessageReactions(msgEvent.ChannelID, botMessageID, "▶️", 10, botMessageID, "")
+	if err != nil {
+		log.Error("Failed to get message Reactions")
+		return map[string]bool{
+			"FastBack":     false,
+			"Back":         false,
+			"Stop":         false,
+			"Forward":      false,
+			"Fast forward": false,
+		}, err
+	}
+
+	// Check forward reaction
+	for _, reactions := range checkReaction {
+		if reactions.ID == msgEvent.Author.ID {
+			return map[string]bool{
+				"FastBack":     false,
+				"Back":         false,
+				"Stop":         false,
+				"Forward":      true,
+				"Fast forward": false,
+			}, nil
+		}
+	}
+
+	checkReaction, err = session.MessageReactions(msgEvent.ChannelID, botMessageID, "⏭️", 10, botMessageID, "")
+	if err != nil {
+		log.Error("Failed to get message Reactions")
+		return map[string]bool{
+			"FastBack":     false,
+			"Back":         false,
+			"Stop":         false,
+			"Forward":      false,
+			"Fast forward": false,
+		}, err
+	}
+
+	// Check back reaction
+	for _, reactions := range checkReaction {
+		if reactions.ID == msgEvent.Author.ID {
+			return map[string]bool{
+				"FastBack":     false,
+				"Back":         false,
+				"Stop":         false,
+				"Forward":      false,
+				"Fast Forward": true,
+			}, nil
+		}
+	}
+
+	return nil, nil
 }
