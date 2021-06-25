@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/kaiserbh/gin-bot-go/config"
 	"github.com/kaiserbh/gin-bot-go/database"
@@ -13,8 +14,9 @@ import (
 
 var db = database.Connect()
 var (
-	red   = 0xff0000
-	green = 0x11ff00
+	red            = 0xff0000
+	green          = 0x11ff00
+	previousAuthor string
 )
 
 func init() {
@@ -53,6 +55,7 @@ func Start() {
 	goBot.AddHandler(pingMessageHandler)
 	goBot.AddHandler(setPrefixHandler)
 	goBot.AddHandler(setBotChannelHandler)
+	go goBot.AddHandler(helpMessageHandler)
 
 	// Start bot with chan.
 	err = goBot.Open()
@@ -95,7 +98,344 @@ func guildJoinInit(s *discordgo.Session, g *discordgo.GuildCreate) {
 	log.Info("init successful")
 }
 
-//TODO:Create HELP MAIN MENU WITH REACTION AND SHIIII
+func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
+	// Checks if the message has prefix from the database file.
+	guild, err := db.FindGuildByID(m.GuildID)
+	if err != nil {
+		log.Error("Finding Guild: ", err)
+		return
+	}
+
+	reactions := []string{"⏮️", "◀️", "⏹️", "▶️", "⏭️"}
+
+	page := 1
+
+	// check the message if it's from the bot if it is ignore.
+	if m.Author.ID == s.State.User.ID {
+		return
+	}
+	// check if the channel is bot channel or allowed channel.
+	allowedChannels := checkAllowedChannel(m.ChannelID, guild)
+	if allowedChannels {
+		if strings.HasPrefix(m.Content, guild.GuildPrefix) {
+			if m.Content == guild.GuildPrefix+"help" {
+				// check if the previous instance is still running.
+				if m.Author.ID == previousAuthor {
+					embed := NewEmbed().
+						SetDescription("hmm, make sure you end the last instance of help menu before executing another one MADAO...").
+						SetColor(red).MessageEmbed
+
+					// add reaction to the message author
+					_, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
+					if err != nil {
+						log.Error("Failed to send embed to the channel: ", err)
+						return
+					}
+					return
+				}
+
+				// bot messageID
+				var botMessageID string
+
+				for {
+					switch page {
+					// page one About page
+					case 1:
+						previousAuthor = m.Author.ID
+						// get the time to check if it's idle or not
+						currentTime := time.Now()
+						// start embed
+						embed := NewEmbed().
+							SetDescription("Help Menu!").
+							SetColor(green).MessageEmbed
+
+						// add reaction to the message author
+						_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+						if err != nil {
+							log.Error("Failed to send embed to the channel: ", err)
+							return
+						}
+						// gets bot Message ID
+						botMessageID, err = getBotMessageID(s, m)
+						if err != nil {
+							log.Error("Failed to get botID")
+							return
+						}
+						// add reaction to the bot message with for loop?
+						for _, emoji := range reactions {
+							err = s.MessageReactionAdd(m.ChannelID, botMessageID, emoji)
+							if err != nil {
+								log.Error("Failed to add reaction: ", err)
+								return
+							}
+						}
+
+						// loop through the time?
+						for {
+							timePassed := time.Since(currentTime)
+							if timePassed.Seconds() >= 30 {
+								log.WithFields(log.Fields{
+									"Time passed": timePassed,
+								}).Info("Removing reactions time has been passed.")
+								err = s.MessageReactionsRemoveAll(m.ChannelID, botMessageID)
+								previousAuthor = ""
+								return
+							}
+							// check if the reaction matches the author ID aka sender
+							checkReaction, err := checkMessageReaction(s, m, botMessageID)
+							if err != nil {
+								log.Error("Failed to check emoji from bot message.")
+								return
+							}
+							// if true then remove it uwu.
+							if checkReaction["Stop"] {
+								fmt.Println("executed stop")
+								err = s.MessageReactionsRemoveAll(m.ChannelID, botMessageID)
+								previousAuthor = ""
+								return
+							} else if checkReaction["FastBack"] {
+								page = 1
+								// remove user reaction before going to next page.
+								err = s.MessageReactionRemove(m.ChannelID, botMessageID, "⏮️", m.Author.ID)
+								if err != nil {
+									log.Error("Failed to remove user reaction from bot message")
+									return
+								}
+								break
+							} else if checkReaction["Back"] {
+								if page == 1 {
+									log.Info("Already on page one not doing anything")
+									// remove user reaction before going to next page.
+									err = s.MessageReactionRemove(m.ChannelID, botMessageID, "◀️", m.Author.ID)
+									if err != nil {
+										log.Error("Failed to remove user reaction from bot message")
+										return
+									}
+								}
+								page -= 1
+								break
+							} else if checkReaction["Forward"] {
+								if page == 5 {
+									log.Info("Last Page already not doing anything")
+									// remove user reaction before going to next page.
+								}
+								err = s.MessageReactionRemove(m.ChannelID, botMessageID, "▶️", m.Author.ID)
+								if err != nil {
+									log.Error("Failed to remove user reaction from bot message")
+									return
+								}
+								page += 1
+								break
+							} else if checkReaction["FastForward"] {
+								page = 5
+								// remove user reaction before going to next page.
+								err = s.MessageReactionRemove(m.ChannelID, botMessageID, "⏭️", m.Author.ID)
+								if err != nil {
+									log.Error("Failed to remove user reaction from bot message")
+									return
+								}
+								break
+							}
+						}
+					case 2:
+						previousAuthor = m.Author.ID
+						// get the time to check if it's idle or not
+						currentTime := time.Now()
+						// start embed
+						embed := NewEmbed().
+							SetDescription("Help Menu! Page 2").
+							SetColor(green).MessageEmbed
+
+						// add reaction to the message author
+						_, err = s.ChannelMessageEditEmbed(m.ChannelID, botMessageID, embed)
+						if err != nil {
+							log.Error("Failed to send embed to the channel: ", err)
+							return
+						}
+						// gets bot Message ID
+						botMessageID, err := getBotMessageID(s, m)
+						if err != nil {
+							log.Error("Failed to get botID")
+							return
+						}
+						// add reaction to the bot message with for loop?
+						for _, emoji := range reactions {
+							err = s.MessageReactionAdd(m.ChannelID, botMessageID, emoji)
+							if err != nil {
+								log.Error("Failed to add reaction: ", err)
+								return
+							}
+						}
+						// loop through the time?
+						for {
+							timePassed := time.Since(currentTime)
+							if timePassed.Seconds() >= 30 {
+								log.WithFields(log.Fields{
+									"Time passed": timePassed,
+								}).Info("Removing reactions time has been passed.")
+								err = s.MessageReactionsRemoveAll(m.ChannelID, botMessageID)
+								previousAuthor = ""
+								return
+							}
+							// check if the reaction matches the author ID aka sender
+							checkReaction, err := checkMessageReaction(s, m, botMessageID)
+							if err != nil {
+								log.Error("Failed to check emoji from bot message.")
+								return
+							}
+							// if true then remove it uwu.
+							if checkReaction["Stop"] {
+								err = s.MessageReactionsRemoveAll(m.ChannelID, botMessageID)
+								previousAuthor = ""
+								return
+							} else if checkReaction["FastBack"] {
+								page = 1
+								// remove user reaction before going to next page.
+								err = s.MessageReactionRemove(m.ChannelID, botMessageID, "⏮️", m.Author.ID)
+								if err != nil {
+									log.Error("Failed to remove user reaction from bot message")
+									return
+								}
+								break
+							} else if checkReaction["Back"] {
+								if page == 1 {
+									log.Info("Already on page one not doing anything")
+									// remove user reaction before going to next page.
+									err = s.MessageReactionRemove(m.ChannelID, botMessageID, "◀️", m.Author.ID)
+									if err != nil {
+										log.Error("Failed to remove user reaction from bot message")
+										return
+									}
+								}
+								page -= 1
+								break
+							} else if checkReaction["Forward"] {
+								if page == 5 {
+									log.Info("Last Page already not doing anything")
+									// remove user reaction before going to next page.
+								}
+								err = s.MessageReactionRemove(m.ChannelID, botMessageID, "▶️", m.Author.ID)
+								if err != nil {
+									log.Error("Failed to remove user reaction from bot message")
+									return
+								}
+								page += 1
+								break
+							} else if checkReaction["FastForward"] {
+								page = 5
+								// remove user reaction before going to next page.
+								err = s.MessageReactionRemove(m.ChannelID, botMessageID, "⏭️", m.Author.ID)
+								if err != nil {
+									log.Error("Failed to remove user reaction from bot message")
+									return
+								}
+								break
+							}
+						}
+					default:
+						// reset page
+						page = 1
+
+						previousAuthor = m.Author.ID
+						// get the time to check if it's idle or not
+						currentTime := time.Now()
+						// start embed
+						embed := NewEmbed().
+							SetDescription("Help Menu!").
+							SetColor(green).MessageEmbed
+
+						// add reaction to the message author
+						_, err = s.ChannelMessageEditEmbed(m.ChannelID, botMessageID, embed)
+						if err != nil {
+							log.Error("Failed to send embed to the channel: ", err)
+							return
+						}
+						// gets bot Message ID
+						botMessageID, err := getBotMessageID(s, m)
+						if err != nil {
+							log.Error("Failed to get botID")
+							return
+						}
+						// add reaction to the bot message with for loop?
+						for _, emoji := range reactions {
+							err = s.MessageReactionAdd(m.ChannelID, botMessageID, emoji)
+							if err != nil {
+								log.Error("Failed to add reaction: ", err)
+								return
+							}
+						}
+						// loop through the time?
+						for {
+							timePassed := time.Since(currentTime)
+							if timePassed.Seconds() >= 30 {
+								log.WithFields(log.Fields{
+									"Time passed": timePassed,
+								}).Info("Removing reactions time has been passed.")
+								err = s.MessageReactionsRemoveAll(m.ChannelID, botMessageID)
+								previousAuthor = ""
+								return
+							}
+							// check if the reaction matches the author ID aka sender
+							checkReaction, err := checkMessageReaction(s, m, botMessageID)
+							if err != nil {
+								log.Error("Failed to check emoji from bot message.")
+								return
+							}
+							// if true then remove it uwu.
+							if checkReaction["Stop"] {
+								err = s.MessageReactionsRemoveAll(m.ChannelID, botMessageID)
+								previousAuthor = ""
+								return
+							} else if checkReaction["FastBack"] {
+								page = 1
+								// remove user reaction before going to next page.
+								err = s.MessageReactionRemove(m.ChannelID, botMessageID, "⏮️", m.Author.ID)
+								if err != nil {
+									log.Error("Failed to remove user reaction from bot message")
+									return
+								}
+								break
+							} else if checkReaction["Back"] {
+								if page == 1 {
+									log.Info("Already on page one not doing anything")
+									// remove user reaction before going to next page.
+									err = s.MessageReactionRemove(m.ChannelID, botMessageID, "◀️", m.Author.ID)
+									if err != nil {
+										log.Error("Failed to remove user reaction from bot message")
+										return
+									}
+								}
+								page -= 1
+								break
+							} else if checkReaction["Forward"] {
+								if page == 5 {
+									log.Info("Last Page already not doing anything")
+									// remove user reaction before going to next page.
+								}
+								err = s.MessageReactionRemove(m.ChannelID, botMessageID, "▶️", m.Author.ID)
+								if err != nil {
+									log.Error("Failed to remove user reaction from bot message")
+									return
+								}
+								page += 1
+								break
+							} else if checkReaction["FastForward"] {
+								page = 5
+								// remove user reaction before going to next page.
+								err = s.MessageReactionRemove(m.ChannelID, botMessageID, "⏭️", m.Author.ID)
+								if err != nil {
+									log.Error("Failed to remove user reaction from bot message")
+									return
+								}
+								break
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
 
 func pingMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Checks if the message has prefix from the database file.
