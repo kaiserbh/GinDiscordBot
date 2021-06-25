@@ -135,9 +135,11 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 				// bot messageID
 				var botMessageID string
-				var ok bool
+				//var ok bool
 				for {
-
+					if page == 10 {
+						break
+					}
 					switch page {
 					// page one About page
 					case 1:
@@ -171,14 +173,10 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 						}
 
 						// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
-						page, ok, err = checkUserReactionSelect(currentTime, botMessageID, s, m)
+						page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
 						if err != nil {
 							log.Error("Failed to check user select Reaction: ", err)
 							return
-						}
-						// break the loop if message stop or timer finishes
-						if ok {
-							break
 						}
 					case 2:
 						previousAuthor = m.Author.ID
@@ -201,22 +199,95 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 							log.Error("Failed to get botID")
 							return
 						}
-						// add reaction to the bot message with for loop?
-						for _, emoji := range reactions {
-							err = s.MessageReactionAdd(m.ChannelID, botMessageID, emoji)
-							if err != nil {
-								log.Error("Failed to add reaction: ", err)
-								return
-							}
-						}
+
 						// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
-						page, ok, err = checkUserReactionSelect(currentTime, botMessageID, s, m)
+						page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
 						if err != nil {
 							log.Error("Failed to check user select Reaction: ", err)
 							return
 						}
-						// break the loop if message stop or timer finishes
-						if ok {
+					case 3:
+						previousAuthor = m.Author.ID
+						// get the time to check if it's idle or not
+						currentTime := time.Now()
+						// start embed
+						embed := NewEmbed().
+							SetDescription("Help Menu! Page 3").
+							SetColor(green).MessageEmbed
+
+						// add reaction to the message author
+						_, err = s.ChannelMessageEditEmbed(m.ChannelID, botMessageID, embed)
+						if err != nil {
+							log.Error("Failed to send embed to the channel: ", err)
+							return
+						}
+						// gets bot Message ID
+						botMessageID, err := getBotMessageID(s, m)
+						if err != nil {
+							log.Error("Failed to get botID")
+							return
+						}
+
+						// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
+						page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
+						if err != nil {
+							log.Error("Failed to check user select Reaction: ", err)
+							return
+						}
+					case 4:
+						previousAuthor = m.Author.ID
+						// get the time to check if it's idle or not
+						currentTime := time.Now()
+						// start embed
+						embed := NewEmbed().
+							SetDescription("Help Menu! Page 4").
+							SetColor(green).MessageEmbed
+
+						// add reaction to the message author
+						_, err = s.ChannelMessageEditEmbed(m.ChannelID, botMessageID, embed)
+						if err != nil {
+							log.Error("Failed to send embed to the channel: ", err)
+							return
+						}
+						// gets bot Message ID
+						botMessageID, err := getBotMessageID(s, m)
+						if err != nil {
+							log.Error("Failed to get botID")
+							return
+						}
+
+						// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
+						page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
+						if err != nil {
+							log.Error("Failed to check user select Reaction: ", err)
+							return
+						}
+					case 5:
+						previousAuthor = m.Author.ID
+						// get the time to check if it's idle or not
+						currentTime := time.Now()
+						// start embed
+						embed := NewEmbed().
+							SetDescription("Help Menu! Page 5").
+							SetColor(green).MessageEmbed
+
+						// add reaction to the message author
+						_, err = s.ChannelMessageEditEmbed(m.ChannelID, botMessageID, embed)
+						if err != nil {
+							log.Error("Failed to send embed to the channel: ", err)
+							return
+						}
+						// gets bot Message ID
+						botMessageID, err := getBotMessageID(s, m)
+						if err != nil {
+							log.Error("Failed to get botID")
+							return
+						}
+
+						// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
+						page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
+						if err != nil {
+							log.Error("Failed to check user select Reaction: ", err)
 							return
 						}
 					default:
@@ -228,7 +299,7 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 						currentTime := time.Now()
 						// start embed
 						embed := NewEmbed().
-							SetDescription("Help Menu! Default").
+							SetDescription("Help Menu!").
 							SetColor(green).MessageEmbed
 
 						// add reaction to the message author
@@ -244,13 +315,9 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 							return
 						}
 						// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
-						page, ok, err = checkUserReactionSelect(currentTime, botMessageID, s, m)
+						page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
 						if err != nil {
 							log.Error("Failed to check user select Reaction: ", err)
-							return
-						}
-						// break the loop if message reaction stop  or timer finishes
-						if ok {
 							return
 						}
 					}
