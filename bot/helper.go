@@ -96,11 +96,11 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	if err != nil {
 		log.Error("Failed to get message Reactions")
 		return map[string]bool{
-			"FastBack":     false,
-			"Back":         false,
-			"Stop":         false,
-			"Forward":      false,
-			"Fast forward": false,
+			"FastBack":    false,
+			"Back":        false,
+			"Stop":        false,
+			"Forward":     false,
+			"FastForward": false,
 		}, err
 	}
 
@@ -121,11 +121,11 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	if err != nil {
 		log.Error("Failed to get message Reactions")
 		return map[string]bool{
-			"FastBack":     false,
-			"Back":         false,
-			"Stop":         false,
-			"Forward":      false,
-			"Fast forward": false,
+			"FastBack":    false,
+			"Back":        false,
+			"Stop":        false,
+			"Forward":     false,
+			"FastForward": false,
 		}, err
 	}
 
@@ -133,11 +133,11 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	for _, reactions := range checkReaction {
 		if reactions.ID == msgEvent.Author.ID {
 			return map[string]bool{
-				"FastBack":     false,
-				"Back":         true,
-				"Stop":         false,
-				"Forward":      false,
-				"Fast forward": false,
+				"FastBack":    false,
+				"Back":        true,
+				"Stop":        false,
+				"Forward":     false,
+				"FastForward": false,
 			}, nil
 		}
 	}
@@ -147,11 +147,11 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	if err != nil {
 		log.Error("Failed to get message Reactions")
 		return map[string]bool{
-			"FastBack":     false,
-			"Back":         false,
-			"Stop":         false,
-			"Forward":      false,
-			"Fast forward": false,
+			"FastBack":    false,
+			"Back":        false,
+			"Stop":        false,
+			"Forward":     false,
+			"FastForward": false,
 		}, err
 	}
 
@@ -159,11 +159,11 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	for _, reactions := range checkReaction {
 		if reactions.ID == msgEvent.Author.ID {
 			return map[string]bool{
-				"FastBack":     false,
-				"Back":         false,
-				"Stop":         true,
-				"Forward":      false,
-				"Fast forward": false,
+				"FastBack":    false,
+				"Back":        false,
+				"Stop":        true,
+				"Forward":     false,
+				"FastForward": false,
 			}, nil
 		}
 	}
@@ -172,11 +172,11 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	if err != nil {
 		log.Error("Failed to get message Reactions")
 		return map[string]bool{
-			"FastBack":     false,
-			"Back":         false,
-			"Stop":         false,
-			"Forward":      false,
-			"Fast forward": false,
+			"FastBack":    false,
+			"Back":        false,
+			"Stop":        false,
+			"Forward":     false,
+			"FastForward": false,
 		}, err
 	}
 
@@ -184,11 +184,11 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	for _, reactions := range checkReaction {
 		if reactions.ID == msgEvent.Author.ID {
 			return map[string]bool{
-				"FastBack":     false,
-				"Back":         false,
-				"Stop":         false,
-				"Forward":      true,
-				"Fast forward": false,
+				"FastBack":    false,
+				"Back":        false,
+				"Stop":        false,
+				"Forward":     true,
+				"FastForward": false,
 			}, nil
 		}
 	}
@@ -197,11 +197,11 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	if err != nil {
 		log.Error("Failed to get message Reactions")
 		return map[string]bool{
-			"FastBack":     false,
-			"Back":         false,
-			"Stop":         false,
-			"Forward":      false,
-			"Fast forward": false,
+			"FastBack":    false,
+			"Back":        false,
+			"Stop":        false,
+			"Forward":     false,
+			"FastForward": false,
 		}, err
 	}
 
@@ -209,11 +209,11 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	for _, reactions := range checkReaction {
 		if reactions.ID == msgEvent.Author.ID {
 			return map[string]bool{
-				"FastBack":     false,
-				"Back":         false,
-				"Stop":         false,
-				"Forward":      false,
-				"Fast Forward": true,
+				"FastBack":    false,
+				"Back":        false,
+				"Stop":        false,
+				"Forward":     false,
+				"FastForward": true,
 			}, nil
 		}
 	}
@@ -221,8 +221,7 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 }
 
 // checks user reaction selection.
-func checkUserReactionSelect(currentTime time.Time, botMessageID string, s *discordgo.Session, m *discordgo.MessageCreate) (int, bool, error) {
-	page := 1
+func checkUserReactionSelect(page int, currentTime time.Time, botMessageID string, s *discordgo.Session, m *discordgo.MessageCreate) (int, error) {
 	errorVal := 10
 	for {
 		timePassed := time.Since(currentTime)
@@ -233,35 +232,35 @@ func checkUserReactionSelect(currentTime time.Time, botMessageID string, s *disc
 			err := s.MessageReactionsRemoveAll(m.ChannelID, botMessageID)
 			if err != nil {
 				log.Error("Failed to remove all reaction from botMessage: ", err)
-				return errorVal, true, err
+				return errorVal, err
 			}
 			previousAuthor = ""
-			return 0, true, err
+			return errorVal, err
 		}
 		// check if the reaction matches the author ID aka sender
 		checkReaction, err := checkMessageReaction(s, m, botMessageID)
 		if err != nil {
 			log.Error("Failed to check emoji from bot message:", err)
-			return errorVal, true, err
+			return errorVal, err
 		}
 		// if true then remove it uwu.
 		if checkReaction["Stop"] {
 			err = s.MessageReactionsRemoveAll(m.ChannelID, botMessageID)
 			if err != nil {
 				log.Error("Failed to remove all reaction from bot message stop reaction.", err)
-				return 0, true, err
+				return 0, err
 			}
 			previousAuthor = ""
-			return errorVal, true, err
+			return errorVal, err
 		} else if checkReaction["FastBack"] {
 			page = 0
 			// remove user reaction before going to next page.
 			err = s.MessageReactionRemove(m.ChannelID, botMessageID, "⏮️", m.Author.ID)
 			if err != nil {
 				log.Error("Failed to remove user reaction from bot message:", err)
-				return errorVal, true, err
+				return errorVal, err
 			}
-			return page, false, nil
+			return page, nil
 		} else if checkReaction["Back"] {
 			if page == 1 {
 				log.Info("Already on page one not doing anything")
@@ -269,32 +268,33 @@ func checkUserReactionSelect(currentTime time.Time, botMessageID string, s *disc
 				err = s.MessageReactionRemove(m.ChannelID, botMessageID, "◀️", m.Author.ID)
 				if err != nil {
 					log.Error("Failed to remove user reaction from bot message: ", err)
-					return errorVal, true, err
+					return errorVal, err
 				}
+				return 0, nil
 			}
 			page -= 1
-			return page, false, nil
+			return page, nil
 		} else if checkReaction["Forward"] {
 			if page == 5 {
 				log.Info("Last Page already not doing anything")
-				// remove user reaction before going to next page.
+				page = 5
 			}
 			err = s.MessageReactionRemove(m.ChannelID, botMessageID, "▶️", m.Author.ID)
 			if err != nil {
 				log.Error("Failed to remove user reaction from bot message: ", err)
-				return errorVal, true, err
+				return errorVal, err
 			}
-			page += 1
-			return page, false, nil
+			page++
+			return page, nil
 		} else if checkReaction["FastForward"] {
 			page = 5
 			// remove user reaction before going to next page.
 			err = s.MessageReactionRemove(m.ChannelID, botMessageID, "⏭️", m.Author.ID)
 			if err != nil {
 				log.Error("Failed to remove user reaction from bot message: ", err)
-				return errorVal, true, err
+				return errorVal, err
 			}
-			return page, false, nil
+			return page, nil
 		}
 	}
 }
