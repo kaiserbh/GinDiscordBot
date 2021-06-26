@@ -1,7 +1,6 @@
 package bot
 
 import (
-	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/kaiserbh/gin-bot-go/model"
 	log "github.com/sirupsen/logrus"
@@ -62,7 +61,10 @@ func memberHasPermission(s *discordgo.Session, guildID string, userID string, pe
 func measureTime(funcName string) func() {
 	start := time.Now()
 	return func() {
-		fmt.Printf("Time taken by %s function is %v \n", funcName, time.Since(start))
+		log.WithFields(log.Fields{
+			"funcName": funcName,
+			"time":     time.Since(start),
+		}).Info("Time taken by function is completed")
 	}
 }
 
@@ -220,8 +222,22 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	return nil, nil
 }
 
+// slows down the page changing by a lot :shrug:
+//func removeMultipleReaction(botMessageID string, session *discordgo.Session, msgEvent *discordgo.MessageCreate)(error){
+//	reactions := []string{"⏮️", "◀️", "▶️", "⏭️"}
+//	for _, reaction := range reactions{
+//		// remove reactions message
+//		err := session.MessageReactionRemove(msgEvent.ChannelID, botMessageID, reaction, msgEvent.Author.ID)
+//		if err != nil {
+//			log.Error("Failed to remove user reaction from bot message:", err)
+//			return err
+//		}
+//	}
+//	return nil
+//}
+
 // checks user reaction selection.
-func checkUserReactionSelect(page int, currentTime time.Time, botMessageID string, s *discordgo.Session, m *discordgo.MessageCreate) (int, error) {
+func checkUserReactionSelect(page int, currentTime time.Time, botMessageID string, session *discordgo.Session, msgEvent *discordgo.MessageCreate) (int, error) {
 	errorVal := 10
 	for {
 		timePassed := time.Since(currentTime)
@@ -229,23 +245,21 @@ func checkUserReactionSelect(page int, currentTime time.Time, botMessageID strin
 			log.WithFields(log.Fields{
 				"Time passed": timePassed,
 			}).Info("Removing reactions time has been passed.")
-			err := s.MessageReactionsRemoveAll(m.ChannelID, botMessageID)
+			err := session.MessageReactionsRemoveAll(msgEvent.ChannelID, botMessageID)
 			if err != nil {
-				log.Error("Failed to remove all reaction from botMessage: ", err)
-				return errorVal, err
 			}
 			previousAuthor = ""
 			return errorVal, err
 		}
 		// check if the reaction matches the author ID aka sender
-		checkReaction, err := checkMessageReaction(s, m, botMessageID)
+		checkReaction, err := checkMessageReaction(session, msgEvent, botMessageID)
 		if err != nil {
 			log.Error("Failed to check emoji from bot message:", err)
 			return errorVal, err
 		}
 		// if true then remove it uwu.
 		if checkReaction["Stop"] {
-			err = s.MessageReactionsRemoveAll(m.ChannelID, botMessageID)
+			err = session.MessageReactionsRemoveAll(msgEvent.ChannelID, botMessageID)
 			if err != nil {
 				log.Error("Failed to remove all reaction from bot message stop reaction.", err)
 				return 0, err
@@ -254,8 +268,8 @@ func checkUserReactionSelect(page int, currentTime time.Time, botMessageID strin
 			return errorVal, err
 		} else if checkReaction["FastBack"] {
 			page = 0
-			// remove user reaction before going to next page.
-			err = s.MessageReactionRemove(m.ChannelID, botMessageID, "⏮️", m.Author.ID)
+			// remove user reactions before going to next page.
+			err := session.MessageReactionRemove(msgEvent.ChannelID, botMessageID, "⏮️", msgEvent.Author.ID)
 			if err != nil {
 				log.Error("Failed to remove user reaction from bot message:", err)
 				return errorVal, err
@@ -263,37 +277,56 @@ func checkUserReactionSelect(page int, currentTime time.Time, botMessageID strin
 			return page, nil
 		} else if checkReaction["Back"] {
 			if page == 1 {
-				log.Info("Already on page one not doing anything")
-				// remove user reaction before going to next page.
-				err = s.MessageReactionRemove(m.ChannelID, botMessageID, "◀️", m.Author.ID)
+				// remove user reactions before going to next page.
+				err := session.MessageReactionRemove(msgEvent.ChannelID, botMessageID, "◀️", msgEvent.Author.ID)
 				if err != nil {
-					log.Error("Failed to remove user reaction from bot message: ", err)
+					log.Error("Failed to remove user reaction from bot message:", err)
+					return errorVal, err
+				}
+				return 0, nil
+			} else if page == 2 {
+				// remove user reactions before going to next page.
+				err := session.MessageReactionRemove(msgEvent.ChannelID, botMessageID, "◀️", msgEvent.Author.ID)
+				if err != nil {
+					log.Error("Failed to remove user reaction from bot message:", err)
 					return errorVal, err
 				}
 				return 0, nil
 			}
-			page -= 1
+			// remove user reactions before going to next page.
+			err := session.MessageReactionRemove(msgEvent.ChannelID, botMessageID, "◀️", msgEvent.Author.ID)
+			if err != nil {
+				log.Error("Failed to remove user reaction from bot message:", err)
+				return errorVal, err
+			}
+			page--
 			return page, nil
 		} else if checkReaction["Forward"] {
 			if page == 5 {
-				log.Info("Last Page already not doing anything")
-				page = 5
+				// remove user reactions before going to next page.
+				err := session.MessageReactionRemove(msgEvent.ChannelID, botMessageID, "▶️", msgEvent.Author.ID)
+				if err != nil {
+					log.Error("Failed to remove user reaction from bot message:", err)
+					return errorVal, err
+				}
+				return 0, nil
 			}
-			err = s.MessageReactionRemove(m.ChannelID, botMessageID, "▶️", m.Author.ID)
+			// remove user reactions before going to next page.
+			err := session.MessageReactionRemove(msgEvent.ChannelID, botMessageID, "▶️", msgEvent.Author.ID)
 			if err != nil {
-				log.Error("Failed to remove user reaction from bot message: ", err)
+				log.Error("Failed to remove user reaction from bot message:", err)
 				return errorVal, err
 			}
 			page++
 			return page, nil
 		} else if checkReaction["FastForward"] {
-			page = 5
-			// remove user reaction before going to next page.
-			err = s.MessageReactionRemove(m.ChannelID, botMessageID, "⏭️", m.Author.ID)
+			// remove user reactions before going to next page.
+			err := session.MessageReactionRemove(msgEvent.ChannelID, botMessageID, "⏭️", msgEvent.Author.ID)
 			if err != nil {
-				log.Error("Failed to remove user reaction from bot message: ", err)
+				log.Error("Failed to remove user reaction from bot message:", err)
 				return errorVal, err
 			}
+			page = 5
 			return page, nil
 		}
 	}
