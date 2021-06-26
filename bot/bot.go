@@ -7,6 +7,7 @@ import (
 	"github.com/kaiserbh/gin-bot-go/model"
 	log "github.com/sirupsen/logrus"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -104,6 +105,7 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		log.Error("Finding Guild: ", err)
 		return
 	}
+	messageContent := strings.ToLower(m.Content)
 
 	reactions := []string{"⏮️", "◀️", "⏹️", "▶️", "⏭️"}
 
@@ -117,7 +119,7 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	allowedChannels := checkAllowedChannel(m.ChannelID, guild)
 	if allowedChannels {
 		if strings.HasPrefix(m.Content, guild.GuildPrefix) {
-			if m.Content == guild.GuildPrefix+"help" {
+			if messageContent == guild.GuildPrefix+"help" {
 				// check if the previous instance is still running.
 				if m.Author.ID == previousAuthor {
 					embed := NewEmbed().
@@ -135,6 +137,7 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 				// bot messageID
 				var botMessageID string
+				var botImage = s.State.User.AvatarURL("")
 				//var ok bool
 				for {
 					if page == 10 {
@@ -148,7 +151,12 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 						currentTime := time.Now()
 						// start embed
 						embed := NewEmbed().
-							SetDescription("Help Menu!").
+							SetTitle("Gin Help Menu").
+							SetThumbnail(botImage).
+							SetDescription("Gin is a feature rich Discord bot designed to bring FUN into your server or one would hope so...").
+							AddField("Invite", "https://www.google.com").
+							AddField("Support Server", "https://www.google.com").
+							SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
 							SetColor(green).MessageEmbed
 
 						// add reaction to the message author
@@ -299,7 +307,12 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 						currentTime := time.Now()
 						// start embed
 						embed := NewEmbed().
-							SetDescription("Help Menu!").
+							SetTitle("Gin Help Menu").
+							SetThumbnail(botImage).
+							SetDescription("Gin is a feature rich Discord bot designed to bring FUN into your server or one would hope so...").
+							AddField("Invite", "https://www.google.com").
+							AddField("Support Server", "https://www.google.com").
+							SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
 							SetColor(green).MessageEmbed
 
 						// add reaction to the message author
@@ -334,6 +347,7 @@ func pingMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		log.Error("Finding Guild: ", err)
 		return
 	}
+	messageContent := strings.ToLower(m.Content)
 	// check if the channel is bot channel or allowed channel.
 	allowedChannels := checkAllowedChannel(m.ChannelID, guild)
 	if allowedChannels {
@@ -341,7 +355,7 @@ func pingMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if m.Author.ID == s.State.User.ID {
 				return
 			}
-			if m.Content == guild.GuildPrefix+"ping" {
+			if messageContent == guild.GuildPrefix+"ping" {
 				// start embed
 				embed := NewEmbed().
 					SetDescription("pong!").
@@ -369,7 +383,8 @@ func setPrefixHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		log.Error("Finding Guild: ", err)
 		return
 	}
-	if strings.HasPrefix(m.Content, guild.GuildPrefix) {
+	messageContent := strings.ToLower(m.Content)
+	if strings.HasPrefix(messageContent, guild.GuildPrefix) {
 		if m.Author.ID == s.State.User.ID {
 			return
 		}
@@ -378,7 +393,6 @@ func setPrefixHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		allowedChannels := checkAllowedChannel(m.ChannelID, guild)
 
 		if allowedChannels {
-			messageContent := m.Content
 			if strings.Contains(messageContent, guild.GuildPrefix+"prefix") {
 				parameter := getArguments(messageContent)
 
