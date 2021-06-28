@@ -2,8 +2,10 @@ package bot
 
 import (
 	"github.com/bwmarrin/discordgo"
+	linuxproc "github.com/c9s/goprocinfo/linux"
 	"github.com/kaiserbh/gin-bot-go/model"
 	log "github.com/sirupsen/logrus"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -330,4 +332,38 @@ func checkUserReactionSelect(page int, currentTime time.Time, botMessageID strin
 			return page, nil
 		}
 	}
+}
+
+func getCpuUsage() (string, error) {
+	stat, err := linuxproc.ReadStat("/proc/stat")
+	if err != nil {
+		log.Error("Failed to read stat possibly due not finding /proc/stat: ", err)
+		return "", err
+	}
+
+	cpuStatSystemFresh := stat.CPUStatAll.System
+	time.Sleep(3 * time.Second)
+	cpuStatSystemNotFresh := stat.CPUStatAll.System
+	difference := cpuStatSystemFresh - cpuStatSystemNotFresh
+	percentage := difference / (uint64(3*time.Second) * 100)
+
+	convertToString := strconv.FormatUint(percentage, 10)
+
+	return convertToString + "%", nil
+}
+
+func getMemInfo() (string, error) {
+	memInfo, err := linuxproc.ReadMemInfo("/proc/meminfo")
+	if err != nil {
+		log.Error("Failed to Read memory info: ", err)
+		return "", err
+	}
+	memoryFree := memInfo.MemFree
+	memoryUsed := memInfo.Active
+
+	memUsagePercentage := (memoryUsed / memoryFree) * 100
+
+	convertToString := strconv.FormatUint(memUsagePercentage, 10)
+
+	return convertToString + "%", nil
 }
