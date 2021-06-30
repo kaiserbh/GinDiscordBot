@@ -686,13 +686,31 @@ func setNicknameDuration(s *discordgo.Session, m *discordgo.MessageCreate) {
 					return
 				}
 				if permission {
+					enteredDays := parameter[1]
+					// check if the argument provided is integer or number only.
+					_, err := strconv.ParseInt(enteredDays, 10, 32)
+					if err != nil {
+						log.Warn(" User error failed to convert string to int: ", err)
+						// start Embed
+						embed := NewEmbed().
+							SetDescription(
+								"Are you fucking serious? even a two year old knows what a number is. ").
+							SetColor(red).MessageEmbed
+						_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+						if err != nil {
+							log.Warn("Failed to send embed to the channel: ", err)
+							return
+						}
+						return
+					}
+
 					currentTime := time.Now().UTC()
 					guildSettings := &model.GuildSettings{
 						GuildID:               m.GuildID,
 						GuildName:             guild.GuildName,
 						GuildPrefix:           guild.GuildPrefix,
 						GuildBotChannelsID:    guild.GuildBotChannelsID,
-						GuildNicknameDuration: parameter[1],
+						GuildNicknameDuration: enteredDays,
 						TimeStamp:             currentTime,
 					}
 
@@ -824,21 +842,49 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		// check if the channel is bot channel or allowed channel.
 		allowedChannels := checkAllowedChannel(m.ChannelID, guild)
+		parameter := getArguments(messageContent)
+
+		// check if it's nick or nickname since contains func will return both nickname and nick function.
+		if parameter[0] != guild.GuildPrefix+"nick" {
+			return
+		}
 
 		if allowedChannels {
 			if strings.Contains(messageContent, guild.GuildPrefix+"nick") {
-				parameter := getArguments(messageContent)
+
+				// guild member used to retrieve username
+				guildMember, err := s.GuildMember(m.GuildID, m.Author.ID)
+				if err != nil {
+					log.Error("Failed to get member details: ", err)
+					return
+				}
+
 				// if parameter is !nick only check how long left to change nickname
 				if len(parameter) == 1 {
 					userDB, err := db.FindUserByID(m.GuildID, m.Author.ID)
 					if err != nil {
 						// embed start
 						embed := NewEmbed().
-							SetDescription(m.Author.Username + " not in DB; meaning can change your nickname in this server.").
+							SetDescription(m.Author.Username + " You can change your nickname in this server.").
 							SetColor(green).MessageEmbed
 						_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
 						if err != nil {
 							log.Error("On sending parameter error message to channel: ", err)
+							return
+						}
+
+						updateUserDB := model.User{
+							UserID:            m.Author.ID,
+							Guild:             guild,
+							NickName:          guildMember.Nick,
+							OldNickNames:      userDB.OldNickNames,
+							Date:              time.Now(),
+							AllowedNickChange: true,
+							TimeStamp:         time.Now(),
+						}
+						err := db.InsertOrUpdateUser(guild, &updateUserDB)
+						if err != nil {
+							log.Error("Failed to Update user: ", err)
 							return
 						}
 						return
@@ -860,7 +906,7 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 					remainingSeconds := guildNickDaysDurationToSeconds - userLastNickUpdate
 					// convert seconds to clock times
 					secondsToDays := remainingSeconds / 86400
-					secondsToHours := remainingSeconds / 24
+					secondsToHours := remainingSeconds / 3600
 					secondsToMinutes := remainingSeconds / 60
 
 					// change to readable format time reminders.
@@ -875,8 +921,9 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 						updateUserDB := model.User{
 							UserID:            m.Author.ID,
 							Guild:             guild,
-							NickName:          "nothing", // TODO:Get user nickname and save it to DB
+							NickName:          guildMember.Nick,
 							Date:              userDB.Date,
+							OldNickNames:      userDB.OldNickNames,
 							AllowedNickChange: true,
 							TimeStamp:         time.Now(),
 						}
@@ -890,7 +937,7 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 						embed := NewEmbed().
 							SetDescription(m.Author.Username +
 								" great news you can change your nickname; use `" +
-								guild.GuildPrefix + "nickname <nickname choice>` command to change nickname").
+								guild.GuildPrefix + "nick <nickname choice>` command to change nickname").
 							SetColor(green).MessageEmbed
 						_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
 						if err != nil {
@@ -925,60 +972,62 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 				// If user can change their nickname.
 				allowedNickChange := user.AllowedNickChange
 				if allowedNickChange {
-
-					//TODO:NICKNAME CHANGE ALSO CHECK IF WHAT USER ENTERED IS ACCEPTABLE AND CLEAN NICK
-					nickname := parameter[1]
-					newNickName := checkPrefix(nickname)
-					if newNickName {
-						// get Guild information
-						updateGuild, err := s.Guild(m.GuildID)
-						if err != nil {
-							log.Error("Failed to get Guild: ", err)
-							return
-						}
-
-						currentTime := time.Now().UTC()
-						guildSettings := &model.GuildSettings{
-							GuildID:               m.GuildID,
-							GuildName:             updateGuild.Name,
-							GuildPrefix:           "",
-							GuildBotChannelsID:    guild.GuildBotChannelsID,
-							GuildNicknameDuration: guild.GuildNicknameDuration,
-							TimeStamp:             currentTime,
-						}
-
-						// insert new prefix to database
-						err = db.InsertOrUpdateGuild(guildSettings)
-						if err != nil {
-							log.Warn("Inserting or Updating guild prefix: ", err)
-							return
-						}
-						guildData, err := db.FindGuildByID(m.GuildID)
-						if err != nil {
-							log.Warn("Couldn't find guild: ", err)
-							return
-						}
-
-						// start Embed
+					// do nothing if the user didn't provide arguments for nickname
+					if len(parameter) < 2 {
+						return
+					}
+					// get the spaces as well.
+					nickname := strings.Join(parameter[1:], " ")
+					// discord doesn't allow nickname more than 32 char
+					if len(nickname) > 32 {
 						embed := NewEmbed().
-							SetDescription("Updated successfully prefix now set to `" +
-								guildData.GuildPrefix + "`").
-							SetColor(green).MessageEmbed
+							SetDescription("Discord does not allow more than 32 characters.").
+							SetColor(red).MessageEmbed
 						_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
 						if err != nil {
 							log.Warn("Failed to send embed to the channel: ", err)
 							return
 						}
-					} else {
-						// start Embed
-						embed := NewEmbed().
-							SetDescription("The chosen prefix is too long.").
-							SetColor(red).MessageEmbed
-						_, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
-						if err != nil {
-							log.Warn("Failed to send embed to the channel: ", err)
-							return
-						}
+						return
+					}
+
+					// add escape characters for \
+					if strings.Contains(nickname, "\\") {
+						nickname = strings.ReplaceAll(nickname, "\\", "\\")
+					}
+
+					// update member nickname
+					_ = s.GuildMemberNickname(m.GuildID, m.Author.ID, nickname)
+
+					// Get old nickname from DB and append it.
+					oldNick := user.OldNickNames
+					oldNick = append(oldNick, user.NickName)
+
+					// update DB
+					newNickUserDB := model.User{
+						UserID:            m.Author.ID,
+						Guild:             guild,
+						NickName:          nickname,
+						OldNickNames:      oldNick,
+						Date:              time.Now(),
+						AllowedNickChange: false,
+						TimeStamp:         time.Now(),
+					}
+
+					err = db.InsertOrUpdateUser(guild, &newNickUserDB)
+					if err != nil {
+						log.Error("Failed to update user in DB: ", err)
+						return
+					}
+
+					embed := NewEmbed().
+						SetDescription("Successfully Updated Check `" + guild.GuildPrefix + "nick`" +
+							"To See How Long Left Until Next Change.").
+						SetColor(green).MessageEmbed
+					_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+					if err != nil {
+						log.Warn("Failed to send embed to the channel: ", err)
+						return
 					}
 				}
 			}
