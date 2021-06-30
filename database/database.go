@@ -94,8 +94,9 @@ func (db *DB) InsertOrUpdateUser(guildSettings *model.GuildSettings, users *mode
 		{"nick_name", users.NickName},
 		{"allowed_nick_change", users.AllowedNickChange},
 		{"time_stamp", users.TimeStamp},
+		{"old_nick_names", users.OldNickNames},
 
-		// nested guild?
+		// nested guild
 		{"guild.guild_prefix", guildSettings.GuildPrefix},
 		{"guild.guild_name", guildSettings.GuildName},
 		{"guild.guild_bot_channels_id", guildSettings.GuildBotChannelsID},
