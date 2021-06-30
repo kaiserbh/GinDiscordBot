@@ -8,6 +8,7 @@ type User struct {
 	UserID            string         `bson:"user_id"`
 	Guild             *GuildSettings `bson:"guild"`
 	NickName          string         `bson:"nick_name"`
+	OldNickNames      []string       `bson:"old_nick_names"`
 	Date              time.Time      `bson:"date"`
 	AllowedNickChange bool           `bson:"allowed_nick_change"`
 	TimeStamp         time.Time      `bson:"time_stamp"`
