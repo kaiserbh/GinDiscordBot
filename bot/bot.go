@@ -840,6 +840,9 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 
+		// reset message content to normal characters and not lower it
+		messageContent = m.Content
+
 		// check if the channel is bot channel or allowed channel.
 		allowedChannels := checkAllowedChannel(m.ChannelID, guild)
 		parameter := getArguments(messageContent)
@@ -852,128 +855,44 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if allowedChannels {
 			if strings.Contains(messageContent, guild.GuildPrefix+"nick") {
 
-				// guild member used to retrieve username
-				guildMember, err := s.GuildMember(m.GuildID, m.Author.ID)
-				if err != nil {
-					log.Error("Failed to get member details: ", err)
-					return
-				}
-
-				// if parameter is !nick only check how long left to change nickname
-				if len(parameter) == 1 {
-					userDB, err := db.FindUserByID(m.GuildID, m.Author.ID)
-					if err != nil {
-						// embed start
-						embed := NewEmbed().
-							SetDescription(m.Author.Username + " You can change your nickname in this server.").
-							SetColor(green).MessageEmbed
-						_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
-						if err != nil {
-							log.Error("On sending parameter error message to channel: ", err)
-							return
-						}
-
-						updateUserDB := model.User{
-							UserID:            m.Author.ID,
-							Guild:             guild,
-							NickName:          guildMember.Nick,
-							OldNickNames:      userDB.OldNickNames,
-							Date:              time.Now(),
-							AllowedNickChange: true,
-							TimeStamp:         time.Now(),
-						}
-						err := db.InsertOrUpdateUser(guild, &updateUserDB)
-						if err != nil {
-							log.Error("Failed to Update user: ", err)
-							return
-						}
-						return
-					}
-					// calculate how long left and reset the duration if it's up.
-					// seconds for the time since last update changes every month or whatever the owner or admin set the nick change days
-					userLastNickUpdate := time.Since(userDB.Date).Seconds()
-
-					// convertStringToInt
-					guildDurationToFloat, err := strconv.ParseFloat(userDB.Guild.GuildNicknameDuration, 10)
-					if err != nil {
-						log.Error("Failed to convert GuildNickname duration to int: ", err)
-						return
-					}
-					// dynamic guild duration
-					guildNickDaysDurationToSeconds := guildDurationToFloat * 86400
-
-					// get the difference.
-					remainingSeconds := guildNickDaysDurationToSeconds - userLastNickUpdate
-					// convert seconds to clock times
-					secondsToDays := remainingSeconds / 86400
-					secondsToHours := remainingSeconds / 3600
-					secondsToMinutes := remainingSeconds / 60
-
-					// change to readable format time reminders.
-					days := int(secondsToDays)
-					hours := int(secondsToHours) % 24
-					minutes := int(secondsToMinutes) % 60
-					seconds := int(remainingSeconds) % 60
-
-					// if the seconds is greater than the duration seconds set by the guild then return
-					//and let them know they can change their nick.
-					if userLastNickUpdate >= guildNickDaysDurationToSeconds {
-						updateUserDB := model.User{
-							UserID:            m.Author.ID,
-							Guild:             guild,
-							NickName:          guildMember.Nick,
-							Date:              userDB.Date,
-							OldNickNames:      userDB.OldNickNames,
-							AllowedNickChange: true,
-							TimeStamp:         time.Now(),
-						}
-						err := db.InsertOrUpdateUser(guild, &updateUserDB)
-						if err != nil {
-							log.Error("Failed to Update user: ", err)
-							return
-						}
-
-						// let them know when they can reset their nickname.
-						embed := NewEmbed().
-							SetDescription(m.Author.Username +
-								" great news you can change your nickname; use `" +
-								guild.GuildPrefix + "nick <nickname choice>` command to change nickname").
-							SetColor(green).MessageEmbed
-						_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
-						if err != nil {
-							log.Error("On sending parameter error message to channel: ", err)
-							return
-						}
-						return
-					}
-
-					// let them know when they can reset their nickname.
-					embed := NewEmbed().
-						SetDescription(m.Author.Username +
-							fmt.Sprintf(" you can change your nickname in `%d%s %d%s %d%s %d%s`",
-								days, "d",
-								hours, "h",
-								minutes, "m",
-								seconds, "s")).
-						SetColor(green).MessageEmbed
-					_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
-					if err != nil {
-						log.Error("On sending parameter error message to channel: ", err)
-						return
-					}
-				}
-
 				// If user can change their nickname
 				user, err := db.FindUserByID(m.GuildID, m.Author.ID)
 				if err != nil {
 					log.Error("Failed to get user: ", err)
-					return
+					// guild member used to retrieve username
+					guildMember, err := s.GuildMember(m.GuildID, m.Author.ID)
+					if err != nil {
+						log.Error("Failed to get member details: ", err)
+						return
+					}
+
+					updateUserDB := model.User{
+						UserID:            m.Author.ID,
+						Guild:             guild,
+						NickName:          guildMember.Nick,
+						OldNickNames:      []string{guildMember.Nick},
+						Date:              time.Now(),
+						AllowedNickChange: true,
+						TimeStamp:         time.Now(),
+					}
+					err = db.InsertOrUpdateUser(guild, &updateUserDB)
+					if err != nil {
+						log.Error("Failed to Update user: ", err)
+						return
+					}
 				}
+
+				user, err = db.FindUserByID(m.GuildID, m.Author.ID)
+				if err != nil {
+					log.Error("Failed to get user: ", err)
+				}
+
 				// If user can change their nickname.
 				allowedNickChange := user.AllowedNickChange
 				if allowedNickChange {
 					// do nothing if the user didn't provide arguments for nickname
 					if len(parameter) < 2 {
+						log.Info("Doing nothing since no arguments was provided")
 						return
 					}
 					// get the spaces as well.
@@ -997,11 +916,23 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 					}
 
 					// update member nickname
-					_ = s.GuildMemberNickname(m.GuildID, m.Author.ID, nickname)
+					err = s.GuildMemberNickname(m.GuildID, m.Author.ID, nickname)
+					if err != nil {
+						log.Error("Failed to change user nickname: ", err)
+						embed := NewEmbed().
+							SetDescription("Sorry it seem like I do not have the permission to do that.").
+							SetColor(red).MessageEmbed
+						_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+						if err != nil {
+							log.Warn("Failed to send embed to the channel: ", err)
+							return
+						}
+						return
+					}
 
 					// Get old nickname from DB and append it.
 					oldNick := user.OldNickNames
-					oldNick = append(oldNick, user.NickName)
+					oldNick = append(oldNick, nickname)
 
 					// update DB
 					newNickUserDB := model.User{
@@ -1020,15 +951,18 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 						return
 					}
 
-					embed := NewEmbed().
-						SetDescription("Successfully Updated Check `" + guild.GuildPrefix + "nick`" +
-							"To See How Long Left Until Next Change.").
-						SetColor(green).MessageEmbed
-					_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+					// get how long time left
+					err = getTimeLeftForNick(s, m, "Successfully changed nickname for this server. \n")
 					if err != nil {
-						log.Warn("Failed to send embed to the channel: ", err)
+						log.Error("Failed to get time left for nick change")
 						return
 					}
+				}
+			} else {
+				err = getTimeLeftForNick(s, m, "")
+				if err != nil {
+					log.Error("Failed to get time left for nick change")
+					return
 				}
 			}
 		}
