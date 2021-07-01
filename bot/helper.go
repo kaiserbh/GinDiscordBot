@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	linuxproc "github.com/c9s/goprocinfo/linux"
 	"github.com/kaiserbh/gin-bot-go/model"
@@ -366,4 +367,90 @@ func getMemInfo() (string, error) {
 	convertToString := strconv.FormatUint(memUsagePercentage, 10)
 
 	return convertToString + "%", nil
+}
+
+func getTimeLeftForNick(s *discordgo.Session, m *discordgo.MessageCreate, message string) error {
+	// get guild info from DB
+	guild, err := db.FindGuildByID(m.GuildID)
+	if err != nil {
+		log.Error("Finding Guild: ", err)
+		return err
+	}
+
+	// guild member used to retrieve username
+	guildMember, err := s.GuildMember(m.GuildID, m.Author.ID)
+	if err != nil {
+		log.Error("Failed to get member details: ", err)
+		return err
+	}
+
+	userDB, err := db.FindUserByID(m.GuildID, m.Author.ID)
+	if err != nil {
+		log.Error("Failed to get user: ", err)
+		return err
+	}
+
+	// calculate how long left and reset the duration if it's up.
+	// seconds for the time since last update changes every month or whatever the owner or admin set the nick change days
+	userLastNickUpdate := time.Since(userDB.Date).Seconds()
+
+	// convertStringToInt
+	guildDurationToFloat, err := strconv.ParseFloat(userDB.Guild.GuildNicknameDuration, 10)
+	if err != nil {
+		log.Error("Failed to convert GuildNickname duration to int: ", err)
+		return err
+	}
+	// dynamic guild duration
+	guildNickDaysDurationToSeconds := guildDurationToFloat * 86400
+
+	// get the difference.
+	remainingSeconds := guildNickDaysDurationToSeconds - userLastNickUpdate
+	// convert seconds to clock times
+	secondsToDays := remainingSeconds / 86400
+	secondsToHours := remainingSeconds / 3600
+	secondsToMinutes := remainingSeconds / 60
+
+	// change to readable format time reminders.
+	days := int(secondsToDays)
+	hours := int(secondsToHours) % 24
+	minutes := int(secondsToMinutes) % 60
+	seconds := int(remainingSeconds) % 60
+
+	// if the seconds is greater than the duration seconds set by the guild then return
+	//and let them know they can change their nick.
+	// updates the allowedNickChange to True if it's full filled
+	if userLastNickUpdate >= guildNickDaysDurationToSeconds {
+		updateUserDB := model.User{
+			UserID:            m.Author.ID,
+			Guild:             guild,
+			NickName:          guildMember.Nick,
+			Date:              userDB.Date,
+			OldNickNames:      userDB.OldNickNames,
+			AllowedNickChange: true,
+			TimeStamp:         time.Now(),
+		}
+		err := db.InsertOrUpdateUser(guild, &updateUserDB)
+		if err != nil {
+			log.Error("Failed to Update user: ", err)
+			return err
+		}
+		return err
+	}
+
+	// let them know when they can reset their nickname.
+	embed := NewEmbed().
+		SetDescription(message + m.Author.Username +
+			fmt.Sprintf(" you can change your nickname in `%d%s %d%s %d%s %d%s`.",
+				days, "d",
+				hours, "h",
+				minutes, "m",
+				seconds, "s")).
+		SetColor(green).MessageEmbed
+	_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+	if err != nil {
+		log.Error("On sending parameter error message to channel: ", err)
+		return err
+
+	}
+	return nil
 }
