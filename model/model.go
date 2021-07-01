@@ -5,17 +5,20 @@ import (
 )
 
 type User struct {
-	UserID       string    `bson:"user_id"`
-	NickName     string    `bson:"nick_name"`
-	Date         time.Time `bson:"date"`
-	DurationLeft time.Time `bson:"duration_left"`
-	TimeStamp    time.Time `bson:"time_stamp"`
+	UserID            string         `bson:"user_id"`
+	Guild             *GuildSettings `bson:"guild"`
+	NickName          string         `bson:"nick_name"`
+	OldNickNames      []string       `bson:"old_nick_names"`
+	Date              time.Time      `bson:"date"`
+	AllowedNickChange bool           `bson:"allowed_nick_change"`
+	TimeStamp         time.Time      `bson:"time_stamp"`
 }
 
 type GuildSettings struct {
-	GuildID            string    `bson:"guild_id"`
-	GuildName          string    `bson:"guild_name"`
-	GuildPrefix        string    `bson:"guild_prefix"`
-	GuildBotChannelsID []string  `bson:"guild_bot_channels_id"`
-	TimeStamp          time.Time `bson:"time_stamp"`
+	GuildID               string    `bson:"guild_id"`
+	GuildName             string    `bson:"guild_name"`
+	GuildPrefix           string    `bson:"guild_prefix"`
+	GuildBotChannelsID    []string  `bson:"guild_bot_channels_id"`
+	GuildNicknameDuration string    `bson:"guild_nickname_duration"`
+	TimeStamp             time.Time `bson:"time_stamp"`
 }

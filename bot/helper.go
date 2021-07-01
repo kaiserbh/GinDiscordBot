@@ -3,8 +3,10 @@ package bot
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	linuxproc "github.com/c9s/goprocinfo/linux"
 	"github.com/kaiserbh/gin-bot-go/model"
 	log "github.com/sirupsen/logrus"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -62,7 +64,10 @@ func memberHasPermission(s *discordgo.Session, guildID string, userID string, pe
 func measureTime(funcName string) func() {
 	start := time.Now()
 	return func() {
-		fmt.Printf("Time taken by %s function is %v \n", funcName, time.Since(start))
+		log.WithFields(log.Fields{
+			"funcName": funcName,
+			"time":     time.Since(start),
+		}).Info("Time taken by function is completed")
 	}
 }
 
@@ -96,11 +101,11 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	if err != nil {
 		log.Error("Failed to get message Reactions")
 		return map[string]bool{
-			"FastBack":     false,
-			"Back":         false,
-			"Stop":         false,
-			"Forward":      false,
-			"Fast forward": false,
+			"FastBack":    false,
+			"Back":        false,
+			"Stop":        false,
+			"Forward":     false,
+			"FastForward": false,
 		}, err
 	}
 
@@ -121,11 +126,11 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	if err != nil {
 		log.Error("Failed to get message Reactions")
 		return map[string]bool{
-			"FastBack":     false,
-			"Back":         false,
-			"Stop":         false,
-			"Forward":      false,
-			"Fast forward": false,
+			"FastBack":    false,
+			"Back":        false,
+			"Stop":        false,
+			"Forward":     false,
+			"FastForward": false,
 		}, err
 	}
 
@@ -133,11 +138,11 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	for _, reactions := range checkReaction {
 		if reactions.ID == msgEvent.Author.ID {
 			return map[string]bool{
-				"FastBack":     false,
-				"Back":         true,
-				"Stop":         false,
-				"Forward":      false,
-				"Fast forward": false,
+				"FastBack":    false,
+				"Back":        true,
+				"Stop":        false,
+				"Forward":     false,
+				"FastForward": false,
 			}, nil
 		}
 	}
@@ -147,11 +152,11 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	if err != nil {
 		log.Error("Failed to get message Reactions")
 		return map[string]bool{
-			"FastBack":     false,
-			"Back":         false,
-			"Stop":         false,
-			"Forward":      false,
-			"Fast forward": false,
+			"FastBack":    false,
+			"Back":        false,
+			"Stop":        false,
+			"Forward":     false,
+			"FastForward": false,
 		}, err
 	}
 
@@ -159,11 +164,11 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	for _, reactions := range checkReaction {
 		if reactions.ID == msgEvent.Author.ID {
 			return map[string]bool{
-				"FastBack":     false,
-				"Back":         false,
-				"Stop":         true,
-				"Forward":      false,
-				"Fast forward": false,
+				"FastBack":    false,
+				"Back":        false,
+				"Stop":        true,
+				"Forward":     false,
+				"FastForward": false,
 			}, nil
 		}
 	}
@@ -172,11 +177,11 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	if err != nil {
 		log.Error("Failed to get message Reactions")
 		return map[string]bool{
-			"FastBack":     false,
-			"Back":         false,
-			"Stop":         false,
-			"Forward":      false,
-			"Fast forward": false,
+			"FastBack":    false,
+			"Back":        false,
+			"Stop":        false,
+			"Forward":     false,
+			"FastForward": false,
 		}, err
 	}
 
@@ -184,11 +189,11 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	for _, reactions := range checkReaction {
 		if reactions.ID == msgEvent.Author.ID {
 			return map[string]bool{
-				"FastBack":     false,
-				"Back":         false,
-				"Stop":         false,
-				"Forward":      true,
-				"Fast forward": false,
+				"FastBack":    false,
+				"Back":        false,
+				"Stop":        false,
+				"Forward":     true,
+				"FastForward": false,
 			}, nil
 		}
 	}
@@ -197,11 +202,11 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	if err != nil {
 		log.Error("Failed to get message Reactions")
 		return map[string]bool{
-			"FastBack":     false,
-			"Back":         false,
-			"Stop":         false,
-			"Forward":      false,
-			"Fast forward": false,
+			"FastBack":    false,
+			"Back":        false,
+			"Stop":        false,
+			"Forward":     false,
+			"FastForward": false,
 		}, err
 	}
 
@@ -209,20 +214,33 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	for _, reactions := range checkReaction {
 		if reactions.ID == msgEvent.Author.ID {
 			return map[string]bool{
-				"FastBack":     false,
-				"Back":         false,
-				"Stop":         false,
-				"Forward":      false,
-				"Fast Forward": true,
+				"FastBack":    false,
+				"Back":        false,
+				"Stop":        false,
+				"Forward":     false,
+				"FastForward": true,
 			}, nil
 		}
 	}
 	return nil, nil
 }
 
+// slows down the page changing by a lot :shrug:
+//func removeMultipleReaction(botMessageID string, session *discordgo.Session, msgEvent *discordgo.MessageCreate)(error){
+//	reactions := []string{"⏮️", "◀️", "▶️", "⏭️"}
+//	for _, reaction := range reactions{
+//		// remove reactions message
+//		err := session.MessageReactionRemove(msgEvent.ChannelID, botMessageID, reaction, msgEvent.Author.ID)
+//		if err != nil {
+//			log.Error("Failed to remove user reaction from bot message:", err)
+//			return err
+//		}
+//	}
+//	return nil
+//}
+
 // checks user reaction selection.
-func checkUserReactionSelect(currentTime time.Time, botMessageID string, s *discordgo.Session, m *discordgo.MessageCreate) (int, bool, error) {
-	page := 1
+func checkUserReactionSelect(page int, currentTime time.Time, botMessageID string, session *discordgo.Session, msgEvent *discordgo.MessageCreate) (int, error) {
 	errorVal := 10
 	for {
 		timePassed := time.Since(currentTime)
@@ -230,71 +248,209 @@ func checkUserReactionSelect(currentTime time.Time, botMessageID string, s *disc
 			log.WithFields(log.Fields{
 				"Time passed": timePassed,
 			}).Info("Removing reactions time has been passed.")
-			err := s.MessageReactionsRemoveAll(m.ChannelID, botMessageID)
+			err := session.MessageReactionsRemoveAll(msgEvent.ChannelID, botMessageID)
 			if err != nil {
-				log.Error("Failed to remove all reaction from botMessage: ", err)
-				return errorVal, true, err
 			}
 			previousAuthor = ""
-			return 0, true, err
+			return errorVal, err
 		}
 		// check if the reaction matches the author ID aka sender
-		checkReaction, err := checkMessageReaction(s, m, botMessageID)
+		checkReaction, err := checkMessageReaction(session, msgEvent, botMessageID)
 		if err != nil {
 			log.Error("Failed to check emoji from bot message:", err)
-			return errorVal, true, err
+			return errorVal, err
 		}
 		// if true then remove it uwu.
 		if checkReaction["Stop"] {
-			err = s.MessageReactionsRemoveAll(m.ChannelID, botMessageID)
+			err = session.MessageReactionsRemoveAll(msgEvent.ChannelID, botMessageID)
 			if err != nil {
 				log.Error("Failed to remove all reaction from bot message stop reaction.", err)
-				return 0, true, err
+				return 0, err
 			}
 			previousAuthor = ""
-			return errorVal, true, err
+			return errorVal, err
 		} else if checkReaction["FastBack"] {
 			page = 0
-			// remove user reaction before going to next page.
-			err = s.MessageReactionRemove(m.ChannelID, botMessageID, "⏮️", m.Author.ID)
+			// remove user reactions before going to next page.
+			err := session.MessageReactionRemove(msgEvent.ChannelID, botMessageID, "⏮️", msgEvent.Author.ID)
 			if err != nil {
 				log.Error("Failed to remove user reaction from bot message:", err)
-				return errorVal, true, err
+				return errorVal, err
 			}
-			return page, false, nil
+			return page, nil
 		} else if checkReaction["Back"] {
 			if page == 1 {
-				log.Info("Already on page one not doing anything")
-				// remove user reaction before going to next page.
-				err = s.MessageReactionRemove(m.ChannelID, botMessageID, "◀️", m.Author.ID)
+				// remove user reactions before going to next page.
+				err := session.MessageReactionRemove(msgEvent.ChannelID, botMessageID, "◀️", msgEvent.Author.ID)
 				if err != nil {
-					log.Error("Failed to remove user reaction from bot message: ", err)
-					return errorVal, true, err
+					log.Error("Failed to remove user reaction from bot message:", err)
+					return errorVal, err
 				}
+				return 0, nil
+			} else if page == 2 {
+				// remove user reactions before going to next page.
+				err := session.MessageReactionRemove(msgEvent.ChannelID, botMessageID, "◀️", msgEvent.Author.ID)
+				if err != nil {
+					log.Error("Failed to remove user reaction from bot message:", err)
+					return errorVal, err
+				}
+				return 0, nil
 			}
-			page -= 1
-			return page, false, nil
+			// remove user reactions before going to next page.
+			err := session.MessageReactionRemove(msgEvent.ChannelID, botMessageID, "◀️", msgEvent.Author.ID)
+			if err != nil {
+				log.Error("Failed to remove user reaction from bot message:", err)
+				return errorVal, err
+			}
+			page--
+			return page, nil
 		} else if checkReaction["Forward"] {
 			if page == 5 {
-				log.Info("Last Page already not doing anything")
-				// remove user reaction before going to next page.
+				// remove user reactions before going to next page.
+				err := session.MessageReactionRemove(msgEvent.ChannelID, botMessageID, "▶️", msgEvent.Author.ID)
+				if err != nil {
+					log.Error("Failed to remove user reaction from bot message:", err)
+					return errorVal, err
+				}
+				return 0, nil
 			}
-			err = s.MessageReactionRemove(m.ChannelID, botMessageID, "▶️", m.Author.ID)
+			// remove user reactions before going to next page.
+			err := session.MessageReactionRemove(msgEvent.ChannelID, botMessageID, "▶️", msgEvent.Author.ID)
 			if err != nil {
-				log.Error("Failed to remove user reaction from bot message: ", err)
-				return errorVal, true, err
+				log.Error("Failed to remove user reaction from bot message:", err)
+				return errorVal, err
 			}
-			page += 1
-			return page, false, nil
+			page++
+			return page, nil
 		} else if checkReaction["FastForward"] {
-			page = 5
-			// remove user reaction before going to next page.
-			err = s.MessageReactionRemove(m.ChannelID, botMessageID, "⏭️", m.Author.ID)
+			// remove user reactions before going to next page.
+			err := session.MessageReactionRemove(msgEvent.ChannelID, botMessageID, "⏭️", msgEvent.Author.ID)
 			if err != nil {
-				log.Error("Failed to remove user reaction from bot message: ", err)
-				return errorVal, true, err
+				log.Error("Failed to remove user reaction from bot message:", err)
+				return errorVal, err
 			}
-			return page, false, nil
+			page = 5
+			return page, nil
 		}
 	}
+}
+
+func getCpuUsage() (string, error) {
+	stat, err := linuxproc.ReadStat("/proc/stat")
+	if err != nil {
+		log.Error("Failed to read stat possibly due not finding /proc/stat: ", err)
+		return "", err
+	}
+
+	cpuStatSystemFresh := stat.CPUStatAll.System
+	time.Sleep(3 * time.Second)
+	cpuStatSystemNotFresh := stat.CPUStatAll.System
+	difference := cpuStatSystemFresh - cpuStatSystemNotFresh
+	percentage := difference / (uint64(3*time.Second) * 100)
+
+	convertToString := strconv.FormatUint(percentage, 10)
+
+	return convertToString + "%", nil
+}
+
+func getMemInfo() (string, error) {
+	memInfo, err := linuxproc.ReadMemInfo("/proc/meminfo")
+	if err != nil {
+		log.Error("Failed to Read memory info: ", err)
+		return "", err
+	}
+	memoryFree := memInfo.MemFree
+	memoryUsed := memInfo.Active
+
+	memUsagePercentage := (memoryUsed / memoryFree) * 100
+
+	convertToString := strconv.FormatUint(memUsagePercentage, 10)
+
+	return convertToString + "%", nil
+}
+
+func getTimeLeftForNick(s *discordgo.Session, m *discordgo.MessageCreate, message string) error {
+	// get guild info from DB
+	guild, err := db.FindGuildByID(m.GuildID)
+	if err != nil {
+		log.Error("Finding Guild: ", err)
+		return err
+	}
+
+	// guild member used to retrieve username
+	guildMember, err := s.GuildMember(m.GuildID, m.Author.ID)
+	if err != nil {
+		log.Error("Failed to get member details: ", err)
+		return err
+	}
+
+	userDB, err := db.FindUserByID(m.GuildID, m.Author.ID)
+	if err != nil {
+		log.Error("Failed to get user: ", err)
+		return err
+	}
+
+	// calculate how long left and reset the duration if it's up.
+	// seconds for the time since last update changes every month or whatever the owner or admin set the nick change days
+	userLastNickUpdate := time.Since(userDB.Date).Seconds()
+
+	// convertStringToInt
+	guildDurationToFloat, err := strconv.ParseFloat(userDB.Guild.GuildNicknameDuration, 10)
+	if err != nil {
+		log.Error("Failed to convert GuildNickname duration to int: ", err)
+		return err
+	}
+	// dynamic guild duration
+	guildNickDaysDurationToSeconds := guildDurationToFloat * 86400
+
+	// get the difference.
+	remainingSeconds := guildNickDaysDurationToSeconds - userLastNickUpdate
+	// convert seconds to clock times
+	secondsToDays := remainingSeconds / 86400
+	secondsToHours := remainingSeconds / 3600
+	secondsToMinutes := remainingSeconds / 60
+
+	// change to readable format time reminders.
+	days := int(secondsToDays)
+	hours := int(secondsToHours) % 24
+	minutes := int(secondsToMinutes) % 60
+	seconds := int(remainingSeconds) % 60
+
+	// if the seconds is greater than the duration seconds set by the guild then return
+	//and let them know they can change their nick.
+	// updates the allowedNickChange to True if it's full filled
+	if userLastNickUpdate >= guildNickDaysDurationToSeconds {
+		updateUserDB := model.User{
+			UserID:            m.Author.ID,
+			Guild:             guild,
+			NickName:          guildMember.Nick,
+			Date:              userDB.Date,
+			OldNickNames:      userDB.OldNickNames,
+			AllowedNickChange: true,
+			TimeStamp:         time.Now(),
+		}
+		err := db.InsertOrUpdateUser(guild, &updateUserDB)
+		if err != nil {
+			log.Error("Failed to Update user: ", err)
+			return err
+		}
+		return err
+	}
+
+	// let them know when they can reset their nickname.
+	embed := NewEmbed().
+		SetDescription(message + m.Author.Username +
+			fmt.Sprintf(" you can change your nickname in `%d%s %d%s %d%s %d%s`.",
+				days, "d",
+				hours, "h",
+				minutes, "m",
+				seconds, "s")).
+		SetColor(green).MessageEmbed
+	_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+	if err != nil {
+		log.Error("On sending parameter error message to channel: ", err)
+		return err
+
+	}
+	return nil
 }
