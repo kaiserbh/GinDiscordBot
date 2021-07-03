@@ -369,12 +369,7 @@ func getMemInfo() (string, error) {
 
 	memUsagePercentage := (memoryUsed / memoryTotal) * 100.0
 
-	fmt.Println("memoryTotal:", memoryTotal)
-	fmt.Println("memoryFree:", memoryFree)
-	fmt.Println("memoryUsed: ", memoryUsed)
-	fmt.Println("memUsage:", memUsagePercentage)
-
-	convertToString := strconv.FormatFloat(memUsagePercentage, 10, 3, 64)
+	convertToString := strconv.FormatFloat(memUsagePercentage, 'f', 2, 64)
 
 	return convertToString + "%", nil
 }
