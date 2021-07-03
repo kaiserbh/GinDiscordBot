@@ -783,14 +783,12 @@ func stats(s *discordgo.Session, m *discordgo.MessageCreate) {
 				uptimeHoursReminder := uptimeHours % 24
 				uptimeMinutesReminder := uptimeMinutes % 60
 
-				//TODO:THIS WILL NOT WORK UNLESS IT"S LINUX SYSTEM SO COMMENT UNTIL MIGRATED
 				// get cpu and memory usage.
 				cpuUsage, err := getCpuUsage()
 				if err != nil {
 					log.Error("Failed to get CPU Usage: ", err)
 				}
 
-				//TODO:THIS WILL NOT WORK UNLESS IT"S LINUX SYSTEM SO COMMENT UNTIL MIGRATED
 				// get memory usage
 				memUsage, err := getMemInfo()
 				if err != nil {
