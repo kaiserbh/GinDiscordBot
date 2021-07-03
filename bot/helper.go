@@ -362,10 +362,11 @@ func getMemInfo() (string, error) {
 
 	// it's in kB (Kilo Byte) convert to Gigabyte
 	memoryTotal := float64(memInfo.MemTotal / 1000000.0)
-	memoryFree := float64(memInfo.MemFree / 1000000.0)
+	//memoryFree := float64(memInfo.MemFree / 1000000.0)
+	memoryActive := float64(memInfo.Active / 1000000.0)
 
 	// memory used and convert to MiB
-	memoryUsed := memoryTotal - memoryFree
+	memoryUsed := memoryTotal - memoryActive
 
 	memUsagePercentage := (memoryUsed / memoryTotal) * 100.0
 
