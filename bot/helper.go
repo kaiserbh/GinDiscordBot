@@ -353,6 +353,7 @@ func getCpuUsage() (string, error) {
 	return convertToString + "%", nil
 }
 
+//TODO: Fix meminfo and CpuUsage
 func getMemInfo() (string, error) {
 	memInfo, err := linuxproc.ReadMemInfo("/proc/meminfo")
 	if err != nil {
@@ -361,16 +362,15 @@ func getMemInfo() (string, error) {
 	}
 
 	// it's in kB (Kilo Byte) convert to Gigabyte
-	memoryTotal := float64(memInfo.MemTotal / 1000000.0)
-	//memoryFree := float64(memInfo.MemFree / 1000000.0)
-	memoryActive := float64(memInfo.Active / 1000000.0)
+	memoryAvailable := float64(memInfo.MemAvailable / 1000000.0)
+	memoryFree := float64(memInfo.MemFree / 1000000.0)
 
 	// memory used and convert to MiB
-	memoryUsed := memoryTotal - memoryActive
+	memoryUsed := memoryAvailable - memoryFree
 
-	memUsagePercentage := (memoryUsed / memoryTotal) * 100.0
-	fmt.Println("memoryTotal: ", memoryTotal)
-	fmt.Println("memoryActive: ", memoryActive)
+	memUsagePercentage := (memoryUsed / memoryAvailable) * 100.0
+	fmt.Println("memoryAvailable: ", memoryAvailable)
+	fmt.Println("memoryFree: ", memoryFree)
 
 	fmt.Println("memoryUsed: ", memoryUsed)
 
