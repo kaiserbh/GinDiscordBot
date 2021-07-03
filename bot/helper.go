@@ -359,11 +359,20 @@ func getMemInfo() (string, error) {
 		log.Error("Failed to Read memory info: ", err)
 		return "", err
 	}
-	memoryFree := memInfo.MemFree
-	memoryUsed := memInfo.Active
 
-	memUsagePercentage := (memoryUsed / memoryFree) * 100
-	fmt.Println("memUsage:", memoryUsed)
+	// it's in kB or kb
+	memoryTotal := memInfo.MemTotal
+	memoryFree := memInfo.MemFree
+
+	// memory used and convert to MiB
+	memoryUsed := (memoryTotal - memoryFree) / 1000
+
+	memUsagePercentage := (memoryUsed / memoryTotal) * 100
+
+	fmt.Println("memoryTotal:", memoryTotal)
+	fmt.Println("memoryFree:", memoryFree)
+	fmt.Println("memoryUsed: ", memoryUsed)
+	fmt.Println("memUsage:", memUsagePercentage)
 
 	convertToString := strconv.FormatUint(memUsagePercentage, 10)
 
