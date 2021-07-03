@@ -360,12 +360,12 @@ func getMemInfo() (string, error) {
 		return "", err
 	}
 
-	// it's in kB or kb
-	memoryTotal := memInfo.MemTotal
-	memoryFree := memInfo.MemFree
+	// it's in kB (Kilo Byte) convert to Gigabyte
+	memoryTotal := memInfo.MemTotal / 1000000
+	memoryFree := memInfo.MemFree / 1000000
 
 	// memory used and convert to MiB
-	memoryUsed := (memoryTotal - memoryFree) / 1000
+	memoryUsed := memoryTotal - memoryFree
 
 	memUsagePercentage := (memoryUsed / memoryTotal) * 100
 
