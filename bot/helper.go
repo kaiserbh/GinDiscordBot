@@ -343,11 +343,12 @@ func getCpuUsage() (string, error) {
 	}
 
 	cpuStatSystemFresh := stat.CPUStatAll.System
-	time.Sleep(3 * time.Second)
+	time.Sleep(1 * time.Second)
 	cpuStatSystemNotFresh := stat.CPUStatAll.System
 	difference := cpuStatSystemFresh - cpuStatSystemNotFresh
-	percentage := difference / (uint64(3*time.Second) * 100)
+	percentage := difference / (uint64(1*time.Second) * 100)
 
+	fmt.Println("memUsage:", percentage)
 	convertToString := strconv.FormatUint(percentage, 10)
 
 	return convertToString + "%", nil
@@ -363,6 +364,7 @@ func getMemInfo() (string, error) {
 	memoryUsed := memInfo.Active
 
 	memUsagePercentage := (memoryUsed / memoryFree) * 100
+	fmt.Println("memUsage:", memUsagePercentage)
 
 	convertToString := strconv.FormatUint(memUsagePercentage, 10)
 
