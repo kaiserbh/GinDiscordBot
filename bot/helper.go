@@ -345,19 +345,23 @@ func getCpuUsage() (string, error) {
 		return "", err
 	}
 
-	total0 := stat.CPUStatAll.System
-	cpuIdle0 := stat.CPUStatAll.Idle
+	cpuStats := stat.CPUStats
+	var total0 uint64
+	var cpuIdle0 uint64
+	for _, s := range cpuStats {
+		total0 += s.System
+		cpuIdle0 = s.Idle
+	}
 
 	time.Sleep(3 * time.Second)
 
-	stat1, err := linuxproc.ReadStat("/proc/stat")
-	if err != nil {
-		log.Error("Failed to read stat possibly due not finding /proc/stat: ", err)
-		return "", err
+	cpuStats1 := stat.CPUStats
+	var total1 uint64
+	var cpuIdle1 uint64
+	for _, s := range cpuStats1 {
+		total1 += s.System
+		cpuIdle1 = s.Idle
 	}
-
-	total1 := stat1.CPUStatAll.System
-	cpuIdle1 := stat1.CPUStatAll.Idle
 
 	idleTicks := float64(cpuIdle1 - cpuIdle0)
 	totalTicks := float64(total1 - total0)
