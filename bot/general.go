@@ -422,11 +422,22 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 		// check if the channel is bot channel or allowed channel.
 		allowedChannels := checkAllowedChannel(m.ChannelID, guild)
 		parameter := getArguments(messageContent)
+
+		// user message ID
+		lastMessage := m.Message.ID
+
+		// gets bot Message ID
+		botMessageID, err := getBotMessageID(s, m)
+		if err != nil {
+			log.Error("Failed to get botID")
+			return
+		}
 		// check if it's nick or nickname since contains func will return both nickname and nick function.
 		if parameter[0] == guild.GuildPrefix+"nick" {
 			// check if allowed channel.
 			if allowedChannels {
 				if strings.Contains(messageContent, guild.GuildPrefix+"nick") {
+					timerToRemoveBotMessageAndUser := time.Now()
 
 					// If user can change their nickname (basically if the user is not in DB)
 					user, err := db.FindUserByID(m.GuildID, m.Author.ID)
@@ -531,11 +542,47 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 							log.Error("Failed to get time left for nick change")
 							return
 						}
+
+						// for loop to check time passed before deleting user message and bot message.
+						for {
+							since := time.Since(timerToRemoveBotMessageAndUser).Seconds()
+
+							if since >= 30 {
+								err = s.ChannelMessageDelete(m.ChannelID, lastMessage)
+								if err != nil {
+									log.Error("Failed to delete user message: ", err)
+									return
+								}
+								err = s.ChannelMessageDelete(m.ChannelID, botMessageID)
+								if err != nil {
+									log.Error("Failed to delete user message: ", err)
+									return
+								}
+								return
+							}
+						}
 					} else {
 						err = getTimeLeftForNick(s, m, "")
 						if err != nil {
 							log.Error("Failed to get time left for nick change")
 							return
+						}
+						// for loop to check time passed before deleting user message and bot message.
+						for {
+							since := time.Since(timerToRemoveBotMessageAndUser).Seconds()
+							if since >= 30 {
+								err = s.ChannelMessageDelete(m.ChannelID, lastMessage)
+								if err != nil {
+									log.Error("Failed to delete user message: ", err)
+									return
+								}
+								err = s.ChannelMessageDelete(m.ChannelID, botMessageID)
+								if err != nil {
+									log.Error("Failed to delete user message: ", err)
+									return
+								}
+								return
+							}
 						}
 					}
 				}
