@@ -49,12 +49,12 @@ func setPrefixHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 					log.Error("Getting user permission: ", err)
 					return
 				}
-				//guildOwner, err := checkGuildOwner(s, m)
-				//if err != nil {
-				//	log.Error("Failed to check guild owner: ", err)
-				//	return
-				//}
-				if permission {
+				guildOwner, err := checkGuildOwner(s, m)
+				if err != nil {
+					log.Error("Failed to check guild owner: ", err)
+					return
+				}
+				if permission || guildOwner {
 					prefix := parameter[1]
 					newPrefix := checkPrefix(prefix)
 					if newPrefix {
@@ -153,13 +153,13 @@ func setBotChannelHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 					return
 				}
 				// check if it's guild owner
-				//guildOwner, err := checkGuildOwner(s, m)
-				//if err != nil {
-				//	log.Error("Failed to check guild owner: ", err)
-				//	return
-				//}
+				guildOwner, err := checkGuildOwner(s, m)
+				if err != nil {
+					log.Error("Failed to check guild owner: ", err)
+					return
+				}
 				// check if they have permission
-				if permission {
+				if permission || guildOwner {
 					// if setting one channel only
 					if len(parameter) == 1 {
 						// add current channel as bot channel
@@ -313,12 +313,12 @@ func setNicknameCooldown(s *discordgo.Session, m *discordgo.MessageCreate) {
 						log.Error("Getting user permission: ", err)
 						return
 					}
-					//guildOwner, err := checkGuildOwner(s, m)
-					//if err != nil {
-					//	log.Error("Failed to check guild owner: ", err)
-					//	return
-					//}
-					if permission {
+					guildOwner, err := checkGuildOwner(s, m)
+					if err != nil {
+						log.Error("Failed to check guild owner: ", err)
+						return
+					}
+					if permission || guildOwner {
 						enteredDays := parameter[1]
 						// check if the argument provided is integer or number only.
 						_, err := strconv.ParseInt(enteredDays, 10, 32)

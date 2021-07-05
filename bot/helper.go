@@ -42,10 +42,6 @@ func checkPrefix(message string) bool {
 func memberHasPermission(s *discordgo.Session, guildID string, userID string, permission int64) (bool, error) {
 	member, err := s.State.Member(guildID, userID)
 	if err != nil {
-		guildOwner, _ := checkGuildOwner(s, guildID, userID)
-		if guildOwner {
-			return true, nil
-		}
 		if member, err = s.GuildMember(guildID, userID); err != nil {
 			return false, err
 		}
@@ -66,13 +62,13 @@ func memberHasPermission(s *discordgo.Session, guildID string, userID string, pe
 }
 
 // check if it's guild owner
-func checkGuildOwner(session *discordgo.Session, guildID, userID string) (bool, error) {
-	guild, err := session.Guild(guildID)
+func checkGuildOwner(session *discordgo.Session, msgEvent *discordgo.MessageCreate) (bool, error) {
+	guild, err := session.Guild(msgEvent.GuildID)
 	if err != nil {
 		return false, err
 
 	}
-	authorID := userID
+	authorID := msgEvent.Author.ID
 	ownerID := guild.OwnerID
 
 	if authorID == ownerID {
