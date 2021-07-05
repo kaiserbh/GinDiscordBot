@@ -338,6 +338,7 @@ func checkUserReactionSelect(page int, currentTime time.Time, botMessageID strin
 	}
 }
 
+//TODO: Fix CpuUsage
 func getCpuUsage() (string, error) {
 	stat, err := linuxproc.ReadStat("/proc/stat")
 	if err != nil {
@@ -346,11 +347,12 @@ func getCpuUsage() (string, error) {
 	}
 
 	cpuStatSystemFresh := stat.CPUStatAll.System
-	time.Sleep(3 * time.Second)
+	time.Sleep(1 * time.Second)
 	cpuStatSystemNotFresh := stat.CPUStatAll.System
 	difference := cpuStatSystemFresh - cpuStatSystemNotFresh
-	percentage := difference / (uint64(3*time.Second) * 100)
+	percentage := difference / (uint64(1*time.Second) * 100)
 
+	fmt.Println("cpuUsage:", cpuStatSystemFresh)
 	convertToString := strconv.FormatUint(percentage, 10)
 
 	return convertToString + "%", nil
@@ -362,12 +364,15 @@ func getMemInfo() (string, error) {
 		log.Error("Failed to Read memory info: ", err)
 		return "", err
 	}
+
+	// it's in kB (Kilo Byte) convert to Gigabyte
+	memoryAvailable := memInfo.MemAvailable
 	memoryFree := memInfo.MemFree
-	memoryUsed := memInfo.Active
 
-	memUsagePercentage := (memoryUsed / memoryFree) * 100
+	// memory used and convert to MiB
+	memoryUsed := float64(memoryAvailable-memoryFree) / float64(memoryAvailable) * 100
 
-	convertToString := strconv.FormatUint(memUsagePercentage, 10)
+	convertToString := strconv.FormatFloat(memoryUsed, 'f', 2, 64)
 
 	return convertToString + "%", nil
 }

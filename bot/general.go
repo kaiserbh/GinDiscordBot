@@ -363,19 +363,15 @@ func stats(s *discordgo.Session, m *discordgo.MessageCreate) {
 				uptimeHoursReminder := uptimeHours % 24
 				uptimeMinutesReminder := uptimeMinutes % 60
 
-				//TODO:THIS WILL NOT WORK UNLESS IT"S LINUX SYSTEM SO COMMENT UNTIL MIGRATED
-				// get cpu and memory usage.
-				//cpuUsage, err := getCpuUsage()
-				//if err != nil {
-				//	log.Error("Failed to get CPU Usage: ", err)
-				//}
+				cpuUsage, err := getCpuUsage()
+				if err != nil {
+					log.Error("Failed to get CPU Usage: ", err)
+				}
 
-				//TODO:THIS WILL NOT WORK UNLESS IT"S LINUX SYSTEM SO COMMENT UNTIL MIGRATED
-				// get memory usage
-				//memUsage, err := getMemInfo()
-				//if err != nil {
-				//	return
-				//}
+				memUsage, err := getMemInfo()
+				if err != nil {
+					return
+				}
 
 				// start embed
 				embed := NewEmbed().
@@ -389,8 +385,8 @@ func stats(s *discordgo.Session, m *discordgo.MessageCreate) {
 						uptimeMinutesReminder, "m",
 						uptimeSeconds, "s")).
 					AddField("Servers", fmt.Sprintf("%d", numberOfGuildIn)).
-					AddField("CPU Usage", "need to be worked on").
-					AddField("RAM Usage", "need to be worked on").
+					AddField("CPU Usage", cpuUsage).
+					AddField("RAM Usage", memUsage).
 					AddField("Go Version", fmt.Sprintf("%v", goVer)).
 					InlineAllFields().
 					SetColor(green).MessageEmbed
