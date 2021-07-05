@@ -346,7 +346,12 @@ func getCpuUsage() (string, error) {
 	}
 
 	cpuStatSystemFresh := stat.CPUStatAll.System
-	time.Sleep(3 * time.Second)
+	time.Sleep(1 * time.Second)
+	stat, err = linuxproc.ReadStat("/proc/stat")
+	if err != nil {
+		log.Error("Failed to read stat possibly due not finding /proc/stat: ", err)
+		return "", err
+	}
 	cpuStatSystemNotFresh := stat.CPUStatAll.System
 	difference := (float64(cpuStatSystemFresh) - float64(cpuStatSystemNotFresh)) * 100 / float64(1*time.Second)
 
