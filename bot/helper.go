@@ -349,7 +349,6 @@ func getCPUSample() (idle, total uint64) {
 		fields := strings.Fields(line)
 		if fields[0] == "cpu" {
 			numFields := len(fields)
-			fmt.Println(fields)
 			for i := 1; i < numFields; i++ {
 				val, err := strconv.ParseUint(fields[i], 10, 64)
 				if err != nil {
@@ -417,6 +416,10 @@ func getCpuUsage() (string, error) {
 	idleTicks := float64(idle1 - idle0)
 	totalTicks := float64(total1 - total0)
 	cpuUsage := 100 * (totalTicks - idleTicks) / totalTicks
+
+	fmt.Println(idleTicks)
+	fmt.Println(totalTicks)
+	fmt.Println(cpuUsage)
 
 	convertToString := strconv.FormatFloat(cpuUsage, 'f', 2, 64)
 
