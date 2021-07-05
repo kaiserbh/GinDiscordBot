@@ -338,7 +338,6 @@ func checkUserReactionSelect(page int, currentTime time.Time, botMessageID strin
 	}
 }
 
-//TODO: Fix CpuUsage
 func getCpuUsage() (string, error) {
 	stat, err := linuxproc.ReadStat("/proc/stat")
 	if err != nil {
@@ -347,13 +346,14 @@ func getCpuUsage() (string, error) {
 	}
 
 	cpuStatSystemFresh := stat.CPUStatAll.System
-	time.Sleep(1 * time.Second)
+	time.Sleep(3 * time.Second)
 	cpuStatSystemNotFresh := stat.CPUStatAll.System
-	difference := cpuStatSystemFresh - cpuStatSystemNotFresh
-	percentage := difference / (uint64(1*time.Second) * 100)
+	difference := cpuStatSystemNotFresh - cpuStatSystemFresh
+	percentage := float64(difference) / float64(3*time.Second) * 100
 
 	fmt.Println("cpuUsage:", cpuStatSystemFresh)
-	convertToString := strconv.FormatUint(percentage, 10)
+	fmt.Println(percentage)
+	convertToString := strconv.FormatFloat(percentage, 'f', 2, 64)
 
 	return convertToString + "%", nil
 }
