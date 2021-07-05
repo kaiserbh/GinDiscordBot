@@ -115,263 +115,265 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 	messageContent := strings.ToLower(m.Content)
+	if strings.HasPrefix(messageContent, guild.GuildPrefix) {
+		reactions := []string{"⏮️", "◀️", "⏹️", "▶️", "⏭️"}
 
-	reactions := []string{"⏮️", "◀️", "⏹️", "▶️", "⏭️"}
+		page := 1
 
-	page := 1
+		// check the message if it's from the bot if it is ignore.
+		if m.Author.ID == s.State.User.ID {
+			return
+		}
+		// check if the channel is bot channel or allowed channel.
+		allowedChannels := checkAllowedChannel(m.ChannelID, guild)
+		if allowedChannels {
+			if strings.HasPrefix(m.Content, guild.GuildPrefix) {
+				if messageContent == guild.GuildPrefix+"help" {
+					// check if the previous instance is still running.
+					if m.Author.ID == previousAuthor {
+						embed := NewEmbed().
+							SetDescription("hmm, make sure you end the last instance of help menu before executing another one MADAO...").
+							SetColor(red).MessageEmbed
 
-	// check the message if it's from the bot if it is ignore.
-	if m.Author.ID == s.State.User.ID {
-		return
-	}
-	// check if the channel is bot channel or allowed channel.
-	allowedChannels := checkAllowedChannel(m.ChannelID, guild)
-	if allowedChannels {
-		if strings.HasPrefix(m.Content, guild.GuildPrefix) {
-			if messageContent == guild.GuildPrefix+"help" {
-				// check if the previous instance is still running.
-				if m.Author.ID == previousAuthor {
-					embed := NewEmbed().
-						SetDescription("hmm, make sure you end the last instance of help menu before executing another one MADAO...").
-						SetColor(red).MessageEmbed
-
-					// add reaction to the message author
-					_, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
-					if err != nil {
-						log.Error("Failed to send embed to the channel: ", err)
+						// add reaction to the message author
+						_, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
+						if err != nil {
+							log.Error("Failed to send embed to the channel: ", err)
+							return
+						}
 						return
 					}
-					return
-				}
 
-				// bot messageID
-				var botMessageID string
-				var botImage = s.State.User.AvatarURL("")
-				//var ok bool
-				for {
-					if page == 10 {
-						break
-					}
-					switch page {
-					// page one About page
-					case 1:
-						previousAuthor = m.Author.ID
-						// get the time to check if it's idle or not
-						currentTime := time.Now()
-						// start embed
-						embed := NewEmbed().
-							SetTitle("Gin Help Menu").
-							SetThumbnail(botImage).
-							SetDescription("Gin is a feature rich Discord bot designed to bring FUN into your server or one would hope so...").
-							AddField("Invite", "https://www.google.com").
-							AddField("Support Server", "https://www.google.com").
-							SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
-							SetColor(green).MessageEmbed
+					// bot messageID
+					var botMessageID string
+					var botImage = s.State.User.AvatarURL("")
+					//var ok bool
+					for {
+						if page == 10 {
+							break
+						}
+						switch page {
+						// page one About page
+						case 1:
+							previousAuthor = m.Author.ID
+							// get the time to check if it's idle or not
+							currentTime := time.Now()
+							// start embed
+							embed := NewEmbed().
+								SetTitle("Gin Help Menu").
+								SetThumbnail(botImage).
+								SetDescription("Gin is a feature rich Discord bot designed to bring FUN into your server or one would hope so...").
+								AddField("Invite", "https://www.google.com").
+								AddField("Support Server", "https://www.google.com").
+								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
+								SetColor(green).MessageEmbed
 
-						// add reaction to the message author
-						_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
-						if err != nil {
-							log.Error("Failed to send embed to the channel: ", err)
-							return
-						}
-						// gets bot Message ID
-						botMessageID, err = getBotMessageID(s, m)
-						if err != nil {
-							log.Error("Failed to get botID")
-							return
-						}
-						// add reaction to the bot message with for loop?
-						for _, emoji := range reactions {
-							err = s.MessageReactionAdd(m.ChannelID, botMessageID, emoji)
+							// add reaction to the message author
+							_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
 							if err != nil {
-								log.Error("Failed to add reaction: ", err)
+								log.Error("Failed to send embed to the channel: ", err)
 								return
 							}
-						}
+							// gets bot Message ID
+							botMessageID, err = getBotMessageID(s, m)
+							if err != nil {
+								log.Error("Failed to get botID")
+								return
+							}
+							// add reaction to the bot message with for loop?
+							for _, emoji := range reactions {
+								err = s.MessageReactionAdd(m.ChannelID, botMessageID, emoji)
+								if err != nil {
+									log.Error("Failed to add reaction: ", err)
+									return
+								}
+							}
 
-						// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
-						page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
-						if err != nil {
-							log.Error("Failed to check user select Reaction: ", err)
-							return
-						}
-					case 2:
-						previousAuthor = m.Author.ID
-						// get the time to check if it's idle or not
-						currentTime := time.Now()
-						// start embed
-						embed := NewEmbed().
-							SetTitle("Configuration").
-							SetThumbnail(botImage).
-							SetDescription("My default prefix is `!`. Use `!help <command>` to get more information on a command.").
-							AddField("prefix", "Change the prefix or view the current prefix.").
-							AddField("botchannel", "sets the current channel as bot channel or set multiple channel as bot channel.").
-							AddField("nickname", "set duration for nickname changes in days").
-							SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
-							SetColor(green).MessageEmbed
+							// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
+							page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
+							if err != nil {
+								log.Error("Failed to check user select Reaction: ", err)
+								return
+							}
+						case 2:
+							previousAuthor = m.Author.ID
+							// get the time to check if it's idle or not
+							currentTime := time.Now()
+							// start embed
+							embed := NewEmbed().
+								SetTitle("Configuration").
+								SetThumbnail(botImage).
+								SetDescription("My default prefix is `!`. Use `!help <command>` to get more information on a command.").
+								AddField("prefix", "Change the prefix or view the current prefix.").
+								AddField("botchannel", "sets the current channel as bot channel or set multiple channel as bot channel.").
+								AddField("nickname", "set duration for nickname changes in days").
+								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
+								SetColor(green).MessageEmbed
 
-						// add reaction to the message author
-						_, err = s.ChannelMessageEditEmbed(m.ChannelID, botMessageID, embed)
-						if err != nil {
-							log.Error("Failed to send embed to the channel: ", err)
-							return
-						}
-						// gets bot Message ID
-						botMessageID, err := getBotMessageID(s, m)
-						if err != nil {
-							log.Error("Failed to get botID")
-							return
-						}
+							// add reaction to the message author
+							_, err = s.ChannelMessageEditEmbed(m.ChannelID, botMessageID, embed)
+							if err != nil {
+								log.Error("Failed to send embed to the channel: ", err)
+								return
+							}
+							// gets bot Message ID
+							botMessageID, err := getBotMessageID(s, m)
+							if err != nil {
+								log.Error("Failed to get botID")
+								return
+							}
 
-						// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
-						page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
-						if err != nil {
-							log.Error("Failed to check user select Reaction: ", err)
-							return
-						}
-					case 3:
-						previousAuthor = m.Author.ID
-						// get the time to check if it's idle or not
-						currentTime := time.Now()
-						// start embed
-						embed := NewEmbed().
-							SetTitle("General").
-							SetThumbnail(botImage).
-							SetDescription("My default prefix is `!`. Use `!help <command>` to get more information on a command.").
-							AddField("help", "Display help menu").
-							AddField("ping", "Pong! Get my latency.").
-							AddField("stats", "See some super cool statistics about me.").
-							AddField("nick", "Check how long left to change nickname or change nickname").
-							AddField("invite", "Get a link to invite me.").
-							AddField("support", "Get a link to my support server.").
-							AddField("source", "Get the link to Gin's GitHub repository.").
-							SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
-							SetColor(green).MessageEmbed
+							// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
+							page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
+							if err != nil {
+								log.Error("Failed to check user select Reaction: ", err)
+								return
+							}
+						case 3:
+							previousAuthor = m.Author.ID
+							// get the time to check if it's idle or not
+							currentTime := time.Now()
+							// start embed
+							embed := NewEmbed().
+								SetTitle("General").
+								SetThumbnail(botImage).
+								SetDescription("My default prefix is `!`. Use `!help <command>` to get more information on a command.").
+								AddField("help", "Display help menu").
+								AddField("ping", "Pong! Get my latency.").
+								AddField("stats", "See some super cool statistics about me.").
+								AddField("nick", "Change nickname").
+								AddField("reset", "resets nickname (doesn't reset duration)").
+								AddField("invite", "Get a link to invite me.").
+								AddField("support", "Get a link to my support server.").
+								AddField("source", "Get the link to Gin's GitHub repository.").
+								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
+								SetColor(green).MessageEmbed
 
-						// add reaction to the message author
-						_, err = s.ChannelMessageEditEmbed(m.ChannelID, botMessageID, embed)
-						if err != nil {
-							log.Error("Failed to send embed to the channel: ", err)
-							return
-						}
-						// gets bot Message ID
-						botMessageID, err := getBotMessageID(s, m)
-						if err != nil {
-							log.Error("Failed to get botID")
-							return
-						}
+							// add reaction to the message author
+							_, err = s.ChannelMessageEditEmbed(m.ChannelID, botMessageID, embed)
+							if err != nil {
+								log.Error("Failed to send embed to the channel: ", err)
+								return
+							}
+							// gets bot Message ID
+							botMessageID, err := getBotMessageID(s, m)
+							if err != nil {
+								log.Error("Failed to get botID")
+								return
+							}
 
-						// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
-						page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
-						if err != nil {
-							log.Error("Failed to check user select Reaction: ", err)
-							return
-						}
-					case 4:
-						previousAuthor = m.Author.ID
-						// get the time to check if it's idle or not
-						currentTime := time.Now()
-						// start embed
-						embed := NewEmbed().
-							SetTitle("Miscellaneous").
-							SetThumbnail(botImage).
-							SetDescription("My default prefix is `!`. Use `!help <command>` to get more information on a command.").
-							AddField("permissions", "Show your permissions or the member specified.").
-							AddField("userinfo", "Show some information about yourself or the member specified.").
-							AddField("serverinfo", "Get some information about this server.").
-							SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
-							SetColor(green).MessageEmbed
+							// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
+							page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
+							if err != nil {
+								log.Error("Failed to check user select Reaction: ", err)
+								return
+							}
+						case 4:
+							previousAuthor = m.Author.ID
+							// get the time to check if it's idle or not
+							currentTime := time.Now()
+							// start embed
+							embed := NewEmbed().
+								SetTitle("Miscellaneous").
+								SetThumbnail(botImage).
+								SetDescription("My default prefix is `!`. Use `!help <command>` to get more information on a command.").
+								AddField("permissions", "Show your permissions or the member specified.").
+								AddField("userinfo", "Show some information about yourself or the member specified.").
+								AddField("serverinfo", "Get some information about this server.").
+								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
+								SetColor(green).MessageEmbed
 
-						// add reaction to the message author
-						_, err = s.ChannelMessageEditEmbed(m.ChannelID, botMessageID, embed)
-						if err != nil {
-							log.Error("Failed to send embed to the channel: ", err)
-							return
-						}
-						// gets bot Message ID
-						botMessageID, err := getBotMessageID(s, m)
-						if err != nil {
-							log.Error("Failed to get botID")
-							return
-						}
+							// add reaction to the message author
+							_, err = s.ChannelMessageEditEmbed(m.ChannelID, botMessageID, embed)
+							if err != nil {
+								log.Error("Failed to send embed to the channel: ", err)
+								return
+							}
+							// gets bot Message ID
+							botMessageID, err := getBotMessageID(s, m)
+							if err != nil {
+								log.Error("Failed to get botID")
+								return
+							}
 
-						// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
-						page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
-						if err != nil {
-							log.Error("Failed to check user select Reaction: ", err)
-							return
-						}
-					case 5:
-						previousAuthor = m.Author.ID
-						// get the time to check if it's idle or not
-						currentTime := time.Now()
-						// start embed
-						embed := NewEmbed().
-							SetTitle("Anilist").
-							SetThumbnail(botImage).
-							SetDescription("My default prefix is `!`. Use `!help <command>` to get more information on a command.").
-							AddField("anime", "Query anime from Anilist").
-							AddField("manga", "Query manga from Anilist").
-							AddField("character", "Query character from Anilist").
-							AddField("staff", "Query person/staff from Anilist").
-							AddField("studio", "Query studio from Anilist").
-							AddField("user", "Query user from Anilist").
-							SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
-							SetColor(green).MessageEmbed
+							// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
+							page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
+							if err != nil {
+								log.Error("Failed to check user select Reaction: ", err)
+								return
+							}
+						case 5:
+							previousAuthor = m.Author.ID
+							// get the time to check if it's idle or not
+							currentTime := time.Now()
+							// start embed
+							embed := NewEmbed().
+								SetTitle("Anilist").
+								SetThumbnail(botImage).
+								SetDescription("My default prefix is `!`. Use `!help <command>` to get more information on a command.").
+								AddField("anime", "Query anime from Anilist").
+								AddField("manga", "Query manga from Anilist").
+								AddField("character", "Query character from Anilist").
+								AddField("staff", "Query person/staff from Anilist").
+								AddField("studio", "Query studio from Anilist").
+								AddField("user", "Query user from Anilist").
+								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
+								SetColor(green).MessageEmbed
 
-						// add reaction to the message author
-						_, err = s.ChannelMessageEditEmbed(m.ChannelID, botMessageID, embed)
-						if err != nil {
-							log.Error("Failed to send embed to the channel: ", err)
-							return
-						}
-						// gets bot Message ID
-						botMessageID, err := getBotMessageID(s, m)
-						if err != nil {
-							log.Error("Failed to get botID")
-							return
-						}
+							// add reaction to the message author
+							_, err = s.ChannelMessageEditEmbed(m.ChannelID, botMessageID, embed)
+							if err != nil {
+								log.Error("Failed to send embed to the channel: ", err)
+								return
+							}
+							// gets bot Message ID
+							botMessageID, err := getBotMessageID(s, m)
+							if err != nil {
+								log.Error("Failed to get botID")
+								return
+							}
 
-						// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
-						page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
-						if err != nil {
-							log.Error("Failed to check user select Reaction: ", err)
-							return
-						}
-					default:
-						// reset page
-						page = 1
+							// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
+							page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
+							if err != nil {
+								log.Error("Failed to check user select Reaction: ", err)
+								return
+							}
+						default:
+							// reset page
+							page = 1
 
-						previousAuthor = m.Author.ID
-						// get the time to check if it's idle or not
-						currentTime := time.Now()
-						// start embed
-						embed := NewEmbed().
-							SetTitle("Gin Help Menu").
-							SetThumbnail(botImage).
-							SetDescription("Gin is a feature rich Discord bot designed to bring FUN into your server or one would hope so...").
-							AddField("Invite", "https://www.google.com").
-							AddField("Support Server", "https://www.google.com").
-							SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
-							SetColor(green).MessageEmbed
+							previousAuthor = m.Author.ID
+							// get the time to check if it's idle or not
+							currentTime := time.Now()
+							// start embed
+							embed := NewEmbed().
+								SetTitle("Gin Help Menu").
+								SetThumbnail(botImage).
+								SetDescription("Gin is a feature rich Discord bot designed to bring FUN into your server or one would hope so...").
+								AddField("Invite", "https://www.google.com").
+								AddField("Support Server", "https://www.google.com").
+								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
+								SetColor(green).MessageEmbed
 
-						// add reaction to the message author
-						_, err = s.ChannelMessageEditEmbed(m.ChannelID, botMessageID, embed)
-						if err != nil {
-							log.Error("Failed to send embed to the channel: ", err)
-							return
-						}
-						// gets bot Message ID
-						botMessageID, err := getBotMessageID(s, m)
-						if err != nil {
-							log.Error("Failed to get botID")
-							return
-						}
-						// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
-						page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
-						if err != nil {
-							log.Error("Failed to check user select Reaction: ", err)
-							return
+							// add reaction to the message author
+							_, err = s.ChannelMessageEditEmbed(m.ChannelID, botMessageID, embed)
+							if err != nil {
+								log.Error("Failed to send embed to the channel: ", err)
+								return
+							}
+							// gets bot Message ID
+							botMessageID, err := getBotMessageID(s, m)
+							if err != nil {
+								log.Error("Failed to get botID")
+								return
+							}
+							// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
+							page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
+							if err != nil {
+								log.Error("Failed to check user select Reaction: ", err)
+								return
+							}
 						}
 					}
 				}
@@ -389,10 +391,11 @@ func pingMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 	messageContent := strings.ToLower(m.Content)
-	// check if the channel is bot channel or allowed channel.
-	allowedChannels := checkAllowedChannel(m.ChannelID, guild)
-	if allowedChannels {
-		if strings.HasPrefix(m.Content, guild.GuildPrefix) {
+
+	if strings.HasPrefix(messageContent, guild.GuildPrefix) {
+		// check if the channel is bot channel or allowed channel.
+		allowedChannels := checkAllowedChannel(m.ChannelID, guild)
+		if allowedChannels {
 			if m.Author.ID == s.State.User.ID {
 				return
 			}
@@ -417,7 +420,41 @@ func pingMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-// prefix
+// resetMessageHandler used to reset nickname to default value, does not change duration..
+func resetMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
+	// Checks if the message has prefix from the database file.
+	guild, err := db.FindGuildByID(m.GuildID)
+	if err != nil {
+		log.Error("Finding Guild: ", err)
+		return
+	}
+	messageContent := strings.ToLower(m.Content)
+
+	if strings.HasPrefix(messageContent, guild.GuildPrefix) {
+		// check if the channel is bot channel or allowed channel.
+		allowedChannels := checkAllowedChannel(m.ChannelID, guild)
+		if allowedChannels {
+			if m.Author.ID == s.State.User.ID {
+				return
+			}
+			if messageContent == guild.GuildPrefix+"reset" {
+				err := s.GuildMemberNickname(m.GuildID, m.Author.ID, " ")
+				if err != nil {
+					log.Error("Failed to reset nickname: ", err)
+					return
+				}
+				// add reaction to the message author
+				lastMessage := m.Message.ID
+				err = s.MessageReactionAdd(m.ChannelID, lastMessage, "✅")
+				if err != nil {
+					log.Error("Failed to add reaction: ", err)
+				}
+			}
+		}
+	}
+}
+
+// setPrefixHandler changes the prefix for the current server or show current prefix for the server.
 func setPrefixHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Checks if the message has prefix from the database file.
 	guild, err := db.FindGuildByID(m.GuildID)
@@ -457,7 +494,12 @@ func setPrefixHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 					log.Error("Getting user permission: ", err)
 					return
 				}
-				if permission {
+				guildOwner, err := checkGuildOwner(s, m)
+				if err != nil {
+					log.Error("Failed to check guild owner: ", err)
+					return
+				}
+				if permission || guildOwner {
 					prefix := parameter[1]
 					newPrefix := checkPrefix(prefix)
 					if newPrefix {
@@ -512,12 +554,24 @@ func setPrefixHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 							return
 						}
 					}
+				} else {
+					// start Embed
+					embed := NewEmbed().
+						SetDescription("Sorry you do not have permission to execute that command.").
+						SetColor(red).MessageEmbed
+					_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+					if err != nil {
+						log.Warn("Failed to send embed to the channel: ", err)
+						return
+					}
+					return
 				}
 			}
 		}
 	}
 }
 
+// setBotChannelHandler sets bot channel for the given channel or channels by providing channel IDs
 func setBotChannelHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Checks if the message has prefix from the database file.
 	guild, err := db.FindGuildByID(m.GuildID)
@@ -543,7 +597,14 @@ func setBotChannelHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 					log.Error("Getting user permission: ", err)
 					return
 				}
-				if permission {
+				// check if it's guild owner
+				guildOwner, err := checkGuildOwner(s, m)
+				if err != nil {
+					log.Error("Failed to check guild owner: ", err)
+					return
+				}
+				// check if they have permission
+				if permission || guildOwner {
 					// if setting one channel only
 					if len(parameter) == 1 {
 						// add current channel as bot channel
@@ -640,6 +701,17 @@ func setBotChannelHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 						log.Warn("Failed to send embed to the channel: ", err)
 						return
 					}
+				} else {
+					// start Embed
+					embed := NewEmbed().
+						SetDescription("Sorry you do not have permission to execute that command.").
+						SetColor(red).MessageEmbed
+					_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+					if err != nil {
+						log.Warn("Failed to send embed to the channel: ", err)
+						return
+					}
+					return
 				}
 			}
 		}
@@ -685,7 +757,12 @@ func setNicknameDuration(s *discordgo.Session, m *discordgo.MessageCreate) {
 					log.Error("Getting user permission: ", err)
 					return
 				}
-				if permission {
+				guildOwner, err := checkGuildOwner(s, m)
+				if err != nil {
+					log.Error("Failed to check guild owner: ", err)
+					return
+				}
+				if permission || guildOwner {
 					enteredDays := parameter[1]
 					// check if the argument provided is integer or number only.
 					_, err := strconv.ParseInt(enteredDays, 10, 32)
@@ -732,6 +809,17 @@ func setNicknameDuration(s *discordgo.Session, m *discordgo.MessageCreate) {
 							"Nickname duration is set to: `" +
 							guildData.GuildNicknameDuration + "days`").
 						SetColor(green).MessageEmbed
+					_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+					if err != nil {
+						log.Warn("Failed to send embed to the channel: ", err)
+						return
+					}
+					return
+				} else {
+					// start Embed
+					embed := NewEmbed().
+						SetDescription("Sorry you do not have permission to execute that command.").
+						SetColor(red).MessageEmbed
 					_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
 					if err != nil {
 						log.Warn("Failed to send embed to the channel: ", err)
