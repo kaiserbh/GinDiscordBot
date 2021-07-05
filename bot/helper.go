@@ -378,7 +378,7 @@ func getCpuUsage() (string, error) {
 	cpus := stat.CPUStats
 
 	for _, cpu := range cpus {
-		totalCpu += cpu.System + cpu.Steal + cpu.Nice + cpu.GuestNice + cpu.IRQ + cpu.SoftIRQ + cpu.IOWait + cpu.User + cpu.Guest
+		totalCpu += cpu.User + cpu.Nice + cpu.System + cpu.IOWait + cpu.IRQ + cpu.SoftIRQ + cpu.Steal + cpu.Guest + cpu.GuestNice
 		totalIdle += cpu.Idle
 		fmt.Printf("%+v", cpu)
 	}
