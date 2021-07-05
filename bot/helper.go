@@ -372,62 +372,50 @@ func getCpuUsage() (string, error) {
 		log.Error("Failed to read stat possibly due not finding /proc/stat: ", err)
 		return "", err
 	}
-	var totalCpu uint64
-	var totalIdle uint64
+	var totalCpu0 uint64
+	var totalIdle0 uint64
+	var totalCpu1 uint64
+	var totalIdle1 uint64
 
 	cpus := stat.CPUStats
 
 	for _, cpu := range cpus {
 		value := cpu.User + cpu.Nice + cpu.System + cpu.IOWait + cpu.IRQ + cpu.SoftIRQ + cpu.Steal + cpu.Guest + cpu.GuestNice
 
-		totalCpu += value
-		totalIdle += cpu.Idle
+		totalCpu0 += value
+		totalIdle0 += cpu.Idle
 		fmt.Printf("%+v", cpu)
 	}
-	fmt.Println(totalCpu)
-	fmt.Println(totalIdle)
-	//
-	//total0 := stat.CPUStatAll.System
-	//cpuIdle0 := stat.CPUStatAll.Idle
-	//
-	//time.Sleep(3 * time.Second)
-	//
-	//stat1, err := linux.ReadStat("/proc/stat")
-	//if err != nil {
-	//	log.Error("Failed to read stat possibly due not finding /proc/stat: ", err)
-	//	return "", err
-	//}
-	//
-	//total1 := stat1.CPUStatAll.System
-	//cpuIdle1 := stat1.CPUStatAll.Idle
-	//
-	//idleTicks := float64(cpuIdle1 - cpuIdle0)
-	//totalTicks := float64(total1 - total0)
-	//cpuUsage := (idleTicks - totalTicks) / totalTicks * 100
-	//fmt.Println("total0", total0)
-	//fmt.Println("total1", total1)
-	//fmt.Println("cpuIdle0", cpuIdle0)
-	//fmt.Println("cpuIdle1", cpuIdle1)
-	//fmt.Println("idleTicks", idleTicks)
-	//fmt.Println("totalTicks", totalTicks)
-	//fmt.Println("cpuUsageDifference", cpuUsage)
+
+	// other version
 
 	idle0, total0 := getCPUSample()
 	time.Sleep(3 * time.Second)
+
+	cpus = stat.CPUStats
+
+	// my ver
+	for _, cpu := range cpus {
+		value := cpu.User + cpu.Nice + cpu.System + cpu.IOWait + cpu.IRQ + cpu.SoftIRQ + cpu.Steal + cpu.Guest + cpu.GuestNice
+
+		totalCpu1 += value
+		totalIdle1 += cpu.Idle
+		fmt.Printf("%+v", cpu)
+	}
+
+	idleTickss := float64(totalIdle1 - totalIdle0)
+	totalCpuTicks := float64(totalCpu1 - totalCpu0)
+	cpuUsageTotal := 100 * (totalCpuTicks - idleTickss) / totalCpuTicks
+
+	convertToStrings := strconv.FormatFloat(cpuUsageTotal, 'f', 2, 64)
+
+	fmt.Println(convertToStrings)
+
 	idle1, total1 := getCPUSample()
 
 	idleTicks := float64(idle1 - idle0)
 	totalTicks := float64(total1 - total0)
 	cpuUsage := 100 * (totalTicks - idleTicks) / totalTicks
-
-	fmt.Println("total0:", total0)
-	fmt.Println("total1:", total1)
-	fmt.Println("idle0:", idle0)
-	fmt.Println("idle1:", idle1)
-
-	fmt.Println("idleTicks:", idleTicks)
-	fmt.Println("totalTicks:", totalTicks)
-	fmt.Println("cpuUsage:", cpuUsage)
 
 	convertToString := strconv.FormatFloat(cpuUsage, 'f', 2, 64)
 
