@@ -3,7 +3,7 @@ package bot
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
-	linuxproc "github.com/c9s/goprocinfo/linux"
+	"github.com/c9s/goprocinfo/linux"
 	"github.com/kaiserbh/gin-bot-go/model"
 	log "github.com/sirupsen/logrus"
 	"strconv"
@@ -339,29 +339,25 @@ func checkUserReactionSelect(page int, currentTime time.Time, botMessageID strin
 }
 
 func getCpuUsage() (string, error) {
-	stat, err := linuxproc.ReadStat("/proc/stat")
+	stat, err := linux.ReadStat("/proc/stat")
 	if err != nil {
 		log.Error("Failed to read stat possibly due not finding /proc/stat: ", err)
 		return "", err
 	}
 
-	cpuStats := stat.CPUStats
-	var total0 uint64
-	var cpuIdle0 uint64
-	for _, s := range cpuStats {
-		total0 += s.System
-		cpuIdle0 = s.Idle
-	}
+	total0 := stat.CPUStatAll.System
+	cpuIdle0 := stat.CPUStatAll.Idle
 
 	time.Sleep(3 * time.Second)
 
-	cpuStats1 := stat.CPUStats
-	var total1 uint64
-	var cpuIdle1 uint64
-	for _, s := range cpuStats1 {
-		total1 += s.System
-		cpuIdle1 = s.Idle
+	stat1, err := linux.ReadStat("/proc/stat")
+	if err != nil {
+		log.Error("Failed to read stat possibly due not finding /proc/stat: ", err)
+		return "", err
 	}
+
+	total1 := stat1.CPUStatAll.System
+	cpuIdle1 := stat1.CPUStatAll.Idle
 
 	idleTicks := float64(cpuIdle1 - cpuIdle0)
 	totalTicks := float64(total1 - total0)
@@ -380,7 +376,7 @@ func getCpuUsage() (string, error) {
 }
 
 func getMemInfo() (string, error) {
-	memInfo, err := linuxproc.ReadMemInfo("/proc/meminfo")
+	memInfo, err := linux.ReadMemInfo("/proc/meminfo")
 	if err != nil {
 		log.Error("Failed to Read memory info: ", err)
 		return "", err
