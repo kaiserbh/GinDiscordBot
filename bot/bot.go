@@ -61,7 +61,7 @@ func Start() {
 	// generalCommands
 	go goBot.AddHandler(helpMessageHandler)
 	goBot.AddHandler(pingMessageHandler)
-	go goBot.AddHandler(stats)
+	goBot.AddHandler(stats)
 	goBot.AddHandler(setNick)
 	goBot.AddHandler(resetNickHandler)
 	//TODO:Invite get invite link for the bot
