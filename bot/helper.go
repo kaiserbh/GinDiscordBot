@@ -361,6 +361,10 @@ func getCpuUsage() (string, error) {
 
 	idleTicks := float64(cpuIdle1 - cpuIdle0)
 	totalTicks := float64(total1 - total0)
+	if totalTicks == 0 {
+		convertToString := strconv.FormatFloat(totalTicks, 'f', 2, 64)
+		return convertToString + "%", nil
+	}
 	cpuUsage := (totalTicks - idleTicks) / totalTicks * 100
 	fmt.Println(total0)
 	fmt.Println(total1)
