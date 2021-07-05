@@ -374,9 +374,6 @@ func getCpuUsage() (string, error) {
 	}
 	var totalCpu0 uint64
 	var totalIdle0 uint64
-	var totalCpu1 uint64
-	var totalIdle1 uint64
-
 	cpus := stat.CPUStats
 
 	for _, cpu := range cpus {
@@ -397,11 +394,14 @@ func getCpuUsage() (string, error) {
 
 	cpuss := stats.CPUStats
 
+	var totalCpu1 uint64
+	var totalIdle1 uint64
+
 	// my ver
-	for _, cpu := range cpuss {
-		value := cpu.User + cpu.Nice + cpu.System + cpu.IOWait + cpu.IRQ + cpu.SoftIRQ + cpu.Steal + cpu.Guest + cpu.GuestNice
+	for _, cpux := range cpuss {
+		value := cpux.User + cpux.Nice + cpux.System + cpux.IOWait + cpux.IRQ + cpux.SoftIRQ + cpux.Steal + cpux.Guest + cpux.GuestNice
 		totalCpu1 += value
-		totalIdle1 += cpu.Idle
+		totalIdle1 += cpux.Idle
 	}
 
 	idleTickss := float64(totalIdle1 - totalIdle0)
@@ -410,7 +410,8 @@ func getCpuUsage() (string, error) {
 
 	convertToStrings := strconv.FormatFloat(cpuUsageTotal, 'f', 2, 64)
 
-	fmt.Println(cpuUsageTotal)
+	fmt.Println(idleTickss)
+	fmt.Println(totalCpuTicks)
 	fmt.Println(convertToStrings)
 
 	idle1, total1 := getCPUSample()
