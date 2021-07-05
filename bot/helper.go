@@ -6,6 +6,7 @@ import (
 	"github.com/c9s/goprocinfo/linux"
 	"github.com/kaiserbh/gin-bot-go/model"
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
 	"strconv"
 	"strings"
 	"time"
@@ -338,37 +339,71 @@ func checkUserReactionSelect(page int, currentTime time.Time, botMessageID strin
 	}
 }
 
+func getCPUSample() (idle, total uint64) {
+	contents, err := ioutil.ReadFile("/proc/stat")
+	if err != nil {
+		return
+	}
+	lines := strings.Split(string(contents), "\n")
+	for _, line := range lines {
+		fields := strings.Fields(line)
+		if fields[0] == "cpu" {
+			numFields := len(fields)
+			for i := 1; i < numFields; i++ {
+				val, err := strconv.ParseUint(fields[i], 10, 64)
+				if err != nil {
+					fmt.Println("Error: ", i, fields[i], err)
+				}
+				total += val // tally up all the numbers to get total ticks
+				if i == 4 {  // idle is the 5th field in the cpu line
+					idle = val
+				}
+			}
+			return
+		}
+	}
+	return
+}
+
 func getCpuUsage() (string, error) {
-	stat, err := linux.ReadStat("/proc/stat")
-	if err != nil {
-		log.Error("Failed to read stat possibly due not finding /proc/stat: ", err)
-		return "", err
-	}
+	//stat, err := linux.ReadStat("/proc/stat")
+	//if err != nil {
+	//	log.Error("Failed to read stat possibly due not finding /proc/stat: ", err)
+	//	return "", err
+	//}
+	//
+	//total0 := stat.CPUStatAll.System
+	//cpuIdle0 := stat.CPUStatAll.Idle
+	//
+	//time.Sleep(3 * time.Second)
+	//
+	//stat1, err := linux.ReadStat("/proc/stat")
+	//if err != nil {
+	//	log.Error("Failed to read stat possibly due not finding /proc/stat: ", err)
+	//	return "", err
+	//}
+	//
+	//total1 := stat1.CPUStatAll.System
+	//cpuIdle1 := stat1.CPUStatAll.Idle
+	//
+	//idleTicks := float64(cpuIdle1 - cpuIdle0)
+	//totalTicks := float64(total1 - total0)
+	//cpuUsage := (idleTicks - totalTicks) / totalTicks * 100
+	//fmt.Println("total0", total0)
+	//fmt.Println("total1", total1)
+	//fmt.Println("cpuIdle0", cpuIdle0)
+	//fmt.Println("cpuIdle1", cpuIdle1)
+	//fmt.Println("idleTicks", idleTicks)
+	//fmt.Println("totalTicks", totalTicks)
+	//fmt.Println("cpuUsageDifference", cpuUsage)
 
-	total0 := stat.CPUStatAll.System
-	cpuIdle0 := stat.CPUStatAll.Idle
-
+	idle0, total0 := getCPUSample()
 	time.Sleep(3 * time.Second)
+	idle1, total1 := getCPUSample()
 
-	stat1, err := linux.ReadStat("/proc/stat")
-	if err != nil {
-		log.Error("Failed to read stat possibly due not finding /proc/stat: ", err)
-		return "", err
-	}
-
-	total1 := stat1.CPUStatAll.System
-	cpuIdle1 := stat1.CPUStatAll.Idle
-
-	idleTicks := float64(cpuIdle1 - cpuIdle0)
+	idleTicks := float64(idle1 - idle0)
 	totalTicks := float64(total1 - total0)
-	cpuUsage := 100 * (idleTicks - totalTicks) / totalTicks
-	fmt.Println("total0", total0)
-	fmt.Println("total1", total1)
-	fmt.Println("cpuIdle0", cpuIdle0)
-	fmt.Println("cpuIdle1", cpuIdle1)
-	fmt.Println("idleTicks", idleTicks)
-	fmt.Println("totalTicks", totalTicks)
-	fmt.Println("cpuUsageDifference", cpuUsage)
+	cpuUsage := 100 * (totalTicks - idleTicks) / totalTicks
 
 	convertToString := strconv.FormatFloat(cpuUsage, 'f', 2, 64)
 
