@@ -345,20 +345,19 @@ func getCpuUsage() (string, error) {
 		return "", err
 	}
 
-	cpuStatSystemFresh := stat.CPUStatAll.User
-	time.Sleep(3 * time.Second)
-	secondRead, err := linuxproc.ReadStat("/proc/stat")
-	if err != nil {
-		log.Error("Failed to read stat possibly due not finding /proc/stat: ", err)
-		return "", err
-	}
-	cpuStatSystemNotFresh := secondRead.CPUStatAll.User
-	difference := (float64(cpuStatSystemFresh - cpuStatSystemNotFresh)) * 100 / float64(3*time.Second)
+	total0 := stat.CPUStatAll.User
+	cpuIdle0 := stat.CPUStatAll.Idle
 
-	fmt.Println("cpuStatSystemFresh:", cpuStatSystemFresh)
-	fmt.Println("cpuStatSystemNotFresh:", cpuStatSystemNotFresh)
-	fmt.Println("difference:", difference)
-	convertToString := strconv.FormatFloat(difference, 'f', 2, 64)
+	time.Sleep(3 * time.Second)
+
+	total1 := stat.CPUStatAll.User
+	cpuIdle1 := stat.CPUStatAll.Idle
+
+	idleTicks := float64(cpuIdle1 - cpuIdle0)
+	totalTicks := float64(total1 - total0)
+	cpuUsage := 100 * (totalTicks - idleTicks) / totalTicks
+
+	convertToString := strconv.FormatFloat(cpuUsage, 'f', 2, 64)
 
 	return convertToString + "%", nil
 }
