@@ -377,6 +377,11 @@ func getCpuUsage() (string, error) {
 		total += val.User
 		total += val.Guest
 		total += val.IRQ
+		total += val.IOWait
+		total += val.GuestNice
+		total += val.Nice
+		total += val.SoftIRQ
+		total += val.Steal
 	}
 	fmt.Println(total)
 	//
