@@ -60,6 +60,23 @@ func memberHasPermission(s *discordgo.Session, guildID string, userID string, pe
 	return false, nil
 }
 
+// check if it's guild owner
+func checkGuildOwner(session *discordgo.Session, msgEvent *discordgo.MessageCreate) (bool, error) {
+	guild, err := session.Guild(msgEvent.GuildID)
+	if err != nil {
+		return false, err
+
+	}
+	authorID := msgEvent.Author.ID
+	ownerID := guild.OwnerID
+
+	if authorID == ownerID {
+		return true, nil
+	}
+
+	return false, nil
+}
+
 // check latency or how long a function takes to execute
 func measureTime(funcName string) func() {
 	start := time.Now()
@@ -224,20 +241,6 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 	}
 	return nil, nil
 }
-
-// slows down the page changing by a lot :shrug:
-//func removeMultipleReaction(botMessageID string, session *discordgo.Session, msgEvent *discordgo.MessageCreate)(error){
-//	reactions := []string{"⏮️", "◀️", "▶️", "⏭️"}
-//	for _, reaction := range reactions{
-//		// remove reactions message
-//		err := session.MessageReactionRemove(msgEvent.ChannelID, botMessageID, reaction, msgEvent.Author.ID)
-//		if err != nil {
-//			log.Error("Failed to remove user reaction from bot message:", err)
-//			return err
-//		}
-//	}
-//	return nil
-//}
 
 // checks user reaction selection.
 func checkUserReactionSelect(page int, currentTime time.Time, botMessageID string, session *discordgo.Session, msgEvent *discordgo.MessageCreate) (int, error) {
