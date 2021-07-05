@@ -342,6 +342,7 @@ func checkUserReactionSelect(page int, currentTime time.Time, botMessageID strin
 func getCPUSample() (idle, total uint64) {
 	contents, err := ioutil.ReadFile("/proc/stat")
 	if err != nil {
+		log.Error("Failed to read file /proc/stat: ", err)
 		return
 	}
 	lines := strings.Split(string(contents), "\n")
@@ -352,7 +353,10 @@ func getCPUSample() (idle, total uint64) {
 			for i := 1; i < numFields; i++ {
 				val, err := strconv.ParseUint(fields[i], 10, 64)
 				if err != nil {
-					fmt.Println("Error: ", i, fields[i], err)
+					log.WithFields(log.Fields{
+						"index":  i,
+						"fields": fields[i],
+					}).Error("Error parsing: ", err)
 				}
 				total += val // tally up all the numbers to get total ticks
 				if i == 4 {  // idle is the 5th field in the cpu line
@@ -366,60 +370,13 @@ func getCPUSample() (idle, total uint64) {
 }
 
 func getCpuUsage() (string, error) {
-	stat, err := linux.ReadStat("/proc/stat")
-	if err != nil {
-		log.Error("Failed to read stat possibly due not finding /proc/stat: ", err)
-		return "", err
-	}
-	var totalCpu0 uint64
-	var totalIdle0 uint64
-	cpus := stat.CPUStats
-
-	for _, cpu := range cpus {
-		totalCpu0 += cpu.User + cpu.Nice + cpu.System + cpu.IOWait + cpu.IRQ + cpu.SoftIRQ + cpu.Steal + cpu.Guest + cpu.GuestNice
-		totalIdle0 += cpu.Idle
-	}
-
-	// other version
-
 	idle0, total0 := getCPUSample()
-	time.Sleep(3 * time.Second)
-	stats, err := linux.ReadStat("/proc/stat")
-	if err != nil {
-		log.Error("Failed to read stat possibly due not finding /proc/stat: ", err)
-		return "", err
-	}
-
-	cpuss := stats.CPUStats
-
-	var totalCpu1 uint64
-	var totalIdle1 uint64
-
-	// my ver
-	for _, cpux := range cpuss {
-		totalCpu1 += cpux.User + cpux.Nice + cpux.System + cpux.IOWait + cpux.IRQ + cpux.SoftIRQ + cpux.Steal + cpux.Guest + cpux.GuestNice
-		totalIdle1 += cpux.Idle
-	}
-
-	idleTickss := float64(totalIdle1 - totalIdle0)
-	totalCpuTicks := float64(totalCpu1 - totalCpu0)
-	cpuUsageTotal := 100 * (totalCpuTicks - idleTickss) / totalCpuTicks
-
-	convertToStrings := strconv.FormatFloat(cpuUsageTotal, 'f', 2, 64)
-
-	fmt.Println(idleTickss)
-	fmt.Println(totalCpuTicks)
-	fmt.Println(convertToStrings)
-
+	time.Sleep(1 * time.Second)
 	idle1, total1 := getCPUSample()
 
 	idleTicks := float64(idle1 - idle0)
 	totalTicks := float64(total1 - total0)
 	cpuUsage := 100 * (totalTicks - idleTicks) / totalTicks
-
-	fmt.Println(idleTicks)
-	fmt.Println(totalTicks)
-	fmt.Println(cpuUsage)
 
 	convertToString := strconv.FormatFloat(cpuUsage, 'f', 2, 64)
 
