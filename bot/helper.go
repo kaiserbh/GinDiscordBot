@@ -376,7 +376,13 @@ func getCpuUsage() (string, error) {
 	guest := stat.CPUStatAll.Guest
 	user := stat.CPUStatAll.User
 	iowait := stat.CPUStatAll.IOWait
-	total += system + guest + user + iowait
+	softIRQ := stat.CPUStatAll.SoftIRQ
+	guestNice := stat.CPUStatAll.GuestNice
+	IRQ := stat.CPUStatAll.IRQ
+	steal := stat.CPUStatAll.Steal
+	nice := stat.CPUStatAll.Nice
+
+	total += system + guest + user + iowait + softIRQ + guestNice + IRQ + steal + nice
 
 	fmt.Println(total)
 	//
