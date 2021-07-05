@@ -68,8 +68,8 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 								SetTitle("Gin Help Menu").
 								SetThumbnail(botImage).
 								SetDescription("Gin is a feature rich Discord bot designed to bring FUN into your server or one would hope so...").
-								AddField("Invite", "https://www.google.com").
-								AddField("Support Server", "https://www.google.com").
+								AddField("Invite", "http://subaruxrem.fun/gin").
+								AddField("Support Server", "https://discord.gg/nkGvkUUqHZ").
 								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
 								SetColor(green).MessageEmbed
 
