@@ -348,12 +348,11 @@ func getCpuUsage() (string, error) {
 	cpuStatSystemFresh := stat.CPUStatAll.System
 	time.Sleep(3 * time.Second)
 	cpuStatSystemNotFresh := stat.CPUStatAll.System
-	difference := cpuStatSystemNotFresh - cpuStatSystemFresh
-	percentage := float64(difference) / float64(3) * 100
+	difference := float64(cpuStatSystemFresh) - float64(cpuStatSystemNotFresh)*100/float64(3*time.Second)
 
 	fmt.Println("cpuUsage:", cpuStatSystemFresh)
-	fmt.Println(percentage)
-	convertToString := strconv.FormatFloat(percentage, 'f', 2, 64)
+	fmt.Println(difference)
+	convertToString := strconv.FormatFloat(difference, 'f', 2, 64)
 
 	return convertToString + "%", nil
 }
