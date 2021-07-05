@@ -372,17 +372,12 @@ func getCpuUsage() (string, error) {
 		return "", err
 	}
 	var total uint64
-	for _, val := range stat.CPUStats {
-		total += val.System
-		total += val.User
-		total += val.Guest
-		total += val.IRQ
-		total += val.IOWait
-		total += val.GuestNice
-		total += val.Nice
-		total += val.SoftIRQ
-		total += val.Steal
-	}
+	system := stat.CPUStatAll.System
+	guest := stat.CPUStatAll.Guest
+	user := stat.CPUStatAll.User
+	iowait := stat.CPUStatAll.IOWait
+	total += system + guest + user + iowait
+
 	fmt.Println(total)
 	//
 	//total0 := stat.CPUStatAll.System
