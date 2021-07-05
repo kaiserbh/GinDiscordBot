@@ -425,13 +425,6 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		// user message ID
 		lastMessage := m.Message.ID
-
-		// gets bot Message ID
-		botMessageID, err := getBotMessageID(s, m)
-		if err != nil {
-			log.Error("Failed to get botID")
-			return
-		}
 		// check if it's nick or nickname since contains func will return both nickname and nick function.
 		if parameter[0] == guild.GuildPrefix+"nick" {
 			// check if allowed channel.
@@ -543,11 +536,18 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 							return
 						}
 
+						// gets bot Message ID
+						botMessageID, err := getBotMessageID(s, m)
+						if err != nil {
+							log.Error("Failed to get botID")
+							return
+						}
+
 						// for loop to check time passed before deleting user message and bot message.
 						for {
 							since := time.Since(timerToRemoveBotMessageAndUser).Seconds()
 
-							if since >= 30 {
+							if since >= 5 {
 								err = s.ChannelMessageDelete(m.ChannelID, lastMessage)
 								if err != nil {
 									log.Error("Failed to delete user message: ", err)
@@ -567,10 +567,16 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 							log.Error("Failed to get time left for nick change")
 							return
 						}
+						// gets bot Message ID
+						botMessageID, err := getBotMessageID(s, m)
+						if err != nil {
+							log.Error("Failed to get botID")
+							return
+						}
 						// for loop to check time passed before deleting user message and bot message.
 						for {
 							since := time.Since(timerToRemoveBotMessageAndUser).Seconds()
-							if since >= 30 {
+							if since >= 5 {
 								err = s.ChannelMessageDelete(m.ChannelID, lastMessage)
 								if err != nil {
 									log.Error("Failed to delete user message: ", err)
