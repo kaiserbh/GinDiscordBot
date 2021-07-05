@@ -345,12 +345,12 @@ func getCpuUsage() (string, error) {
 		return "", err
 	}
 
-	total0 := stat.CPUStatAll.User
+	total0 := stat.CPUStatAll.System
 	cpuIdle0 := stat.CPUStatAll.Idle
 
 	time.Sleep(3 * time.Second)
 
-	total1 := stat.CPUStatAll.User
+	total1 := stat.CPUStatAll.System
 	cpuIdle1 := stat.CPUStatAll.Idle
 
 	idleTicks := float64(cpuIdle1 - cpuIdle0)
