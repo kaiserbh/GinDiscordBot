@@ -372,13 +372,17 @@ func getCpuUsage() (string, error) {
 		log.Error("Failed to read stat possibly due not finding /proc/stat: ", err)
 		return "", err
 	}
-	var total uint64
+	var totalCpu uint64
+	var totalIdle uint64
+
 	cpus := stat.CPUStats
 
 	for _, cpu := range cpus {
-		fmt.Println(cpu)
+		totalCpu += cpu.System + cpu.Steal + cpu.Nice + cpu.GuestNice + cpu.IRQ + cpu.SoftIRQ + cpu.IOWait + cpu.User + cpu.Guest
+		totalIdle += cpu.Idle
 	}
-	fmt.Println(total)
+	fmt.Println(totalCpu)
+	fmt.Println(totalIdle)
 	//
 	//total0 := stat.CPUStatAll.System
 	//cpuIdle0 := stat.CPUStatAll.Idle
