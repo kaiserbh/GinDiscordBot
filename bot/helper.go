@@ -366,11 +366,16 @@ func getCPUSample() (idle, total uint64) {
 }
 
 func getCpuUsage() (string, error) {
-	//stat, err := linux.ReadStat("/proc/stat")
-	//if err != nil {
-	//	log.Error("Failed to read stat possibly due not finding /proc/stat: ", err)
-	//	return "", err
-	//}
+	stat, err := linux.ReadStat("/proc/stat")
+	if err != nil {
+		log.Error("Failed to read stat possibly due not finding /proc/stat: ", err)
+		return "", err
+	}
+	var total uint64
+	for _, val := range stat.CPUStats {
+		total += val.System
+	}
+	fmt.Println(total)
 	//
 	//total0 := stat.CPUStatAll.System
 	//cpuIdle0 := stat.CPUStatAll.Idle
