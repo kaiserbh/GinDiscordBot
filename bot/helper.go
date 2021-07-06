@@ -110,9 +110,13 @@ func getBotMessageID(session *discordgo.Session, msgEvent *discordgo.MessageCrea
 		log.Error("Failed to get messages from channel")
 		return "", err
 	}
-	botMessageID := channelMessages[0].ID
-
-	return botMessageID, nil
+	if len(channelMessages) == 0 {
+		log.Error("Channel Messages is nil")
+		return "", err
+	} else {
+		botMessageID := channelMessages[0].ID
+		return botMessageID, nil
+	}
 }
 
 // check skip backward reaction
