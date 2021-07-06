@@ -64,8 +64,14 @@ func Start() {
 	goBot.AddHandler(stats)
 	goBot.AddHandler(setNick)
 	goBot.AddHandler(resetNickHandler)
+	goBot.AddHandler(botPing)
+	goBot.AddHandler(invite)
+
 	//TODO:Invite get invite link for the bot
+	//FINISHED:Invite link works for all bots
+
 	//TODO:Support get support invite link
+
 	//TODO:Source github repo
 
 	// anilistCommands
@@ -80,6 +86,8 @@ func Start() {
 	//TODO:permissions Show your permissions or the member specified.
 	//TODO:userinfo Show some information about yourself or the member specified.
 	//TODO:serverinfo Get some information about this server.
+
+	//TODO:
 
 	// Start bot with chan.
 	err = goBot.Open()

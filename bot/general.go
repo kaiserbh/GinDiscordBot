@@ -2,13 +2,14 @@ package bot
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
-	"github.com/kaiserbh/gin-bot-go/model"
-	log "github.com/sirupsen/logrus"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/kaiserbh/gin-bot-go/model"
+	log "github.com/sirupsen/logrus"
 )
 
 //helpMessageHandler help menu
@@ -68,8 +69,8 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 								SetTitle("Gin Help Menu").
 								SetThumbnail(botImage).
 								SetDescription("Gin is a feature rich Discord bot designed to bring FUN into your server or one would hope so...").
-								AddField("Invite", "http://subaruxrem.fun/gin").
-								AddField("Support Server", "https://discord.gg/nkGvkUUqHZ").
+								AddField("Invite", fmt.Sprintf("[Invite %s](https://discordapp.com/oauth2/authorize?client_id=%s&scope=bot&permissions=8)", s.State.User.Username, s.State.User.ID)).
+								AddField("Support Server", "[Gin Support](https://discord.gg/nkGvkUUqHZ)").
 								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
 								SetColor(green).MessageEmbed
 
@@ -108,7 +109,7 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 							embed := NewEmbed().
 								SetTitle("Configuration").
 								SetThumbnail(botImage).
-								SetDescription("My default prefix is `!`. Use `!help <command>` to get more information on a command.").
+								SetDescription(fmt.Sprintf("My default prefix is `%[1]s`. Use `%[1]shelp <command>` to get more information on a command.", guild.GuildPrefix)).
 								AddField("prefix", "Change the prefix or view the current prefix.").
 								AddField("botchannel", "sets the current channel as bot channel or set multiple channel as bot channel.").
 								AddField("cooldown", "set duration for nickname changes in days").
@@ -142,7 +143,7 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 							embed := NewEmbed().
 								SetTitle("General").
 								SetThumbnail(botImage).
-								SetDescription("My default prefix is `!`. Use `!help <command>` to get more information on a command.").
+								SetDescription(fmt.Sprintf("My default prefix is `%[1]s`. Use `%[1]shelp <command>` to get more information on a command.", guild.GuildPrefix)).
 								AddField("help", "Display help menu").
 								AddField("ping", "Pong! Get my latency.").
 								AddField("stats", "See some super cool statistics about me.").
@@ -181,7 +182,7 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 							embed := NewEmbed().
 								SetTitle("Anilist").
 								SetThumbnail(botImage).
-								SetDescription("My default prefix is `!`. Use `!help <command>` to get more information on a command.").
+								SetDescription(fmt.Sprintf("My default prefix is `%[1]s`. Use `%[1]shelp <command>` to get more information on a command.", guild.GuildPrefix)).
 								AddField("anime", "Query anime from Anilist").
 								AddField("manga", "Query manga from Anilist").
 								AddField("character", "Query character from Anilist").
@@ -218,7 +219,7 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 							embed := NewEmbed().
 								SetTitle("Miscellaneous").
 								SetThumbnail(botImage).
-								SetDescription("My default prefix is `!`. Use `!help <command>` to get more information on a command.").
+								SetDescription(fmt.Sprintf("My default prefix is `%[1]s`. Use `%[1]shelp <command>` to get more information on a command.", guild.GuildPrefix)).
 								AddField("permissions", "Show your permissions or the member specified.").
 								AddField("userinfo", "Show some information about yourself or the member specified.").
 								AddField("serverinfo", "Get some information about this server.").
@@ -626,6 +627,85 @@ func resetNickHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				if err != nil {
 					log.Error("Failed to add reaction: ", err)
 				}
+			}
+		}
+	}
+}
+
+// botPing handles message that include pings to the bot
+func botPing(s *discordgo.Session, m *discordgo.MessageCreate) {
+
+	// Checks if the message has prefix from the database file.
+	guild, err := db.FindGuildByID(m.GuildID)
+
+	if err != nil {
+		log.Error("Finding Guild: ", err)
+		return
+	}
+
+	messageContent := strings.ToLower(m.Content)
+
+	// check if the channel is bot channel or allowed channel.
+	allowedChannels := checkAllowedChannel(m.ChannelID, guild)
+
+	if allowedChannels {
+
+		if m.Author.ID == s.State.User.ID {
+			return
+		}
+
+		if strings.Contains(messageContent, "<@!"+s.State.User.ID+">") {
+			// start embed
+
+			embed := NewEmbed().
+				SetDescription("The prefix for this server is " + "`" + guild.GuildPrefix + "`.").
+				SetColor(green).MessageEmbed
+
+			_, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
+			if err != nil {
+				log.Error("Failed to send embed to the channel: ", err)
+			}
+
+			// add reaction to the message author
+			err = s.MessageReactionAdd(m.ChannelID, m.Message.ID, "👋")
+			if err != nil {
+				log.Error("Failed to add reaction: ", err)
+
+			}
+		}
+	}
+}
+
+// pingMessageHandler pings the bot
+func invite(s *discordgo.Session, m *discordgo.MessageCreate) {
+	// Checks if the message has prefix from the database file.
+	guild, err := db.FindGuildByID(m.GuildID)
+	if err != nil {
+		log.Error("Finding Guild: ", err)
+		return
+	}
+	messageContent := strings.ToLower(m.Content)
+
+	if strings.HasPrefix(messageContent, guild.GuildPrefix) {
+		// check if the channel is bot channel or allowed channel.
+		allowedChannels := checkAllowedChannel(m.ChannelID, guild)
+		if allowedChannels {
+			if m.Author.ID == s.State.User.ID {
+				return
+			}
+			if messageContent == guild.GuildPrefix+"invite" {
+				// start embed
+				embed := NewEmbed().
+					SetTitle("Gin invite link").SetURL("https://discord.com/api/oauth2/authorize?client_id=" + s.State.User.ID + "&permissions=8&scope=bot").
+					SetColor(green).MessageEmbed
+
+				// add reaction to the message author
+
+				_, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
+				if err != nil {
+					log.Error("Failed to send embed to the channel: ", err)
+				}
+
 			}
 		}
 	}
