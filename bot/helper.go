@@ -2,14 +2,15 @@ package bot
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
-	"github.com/c9s/goprocinfo/linux"
-	"github.com/kaiserbh/gin-bot-go/model"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/c9s/goprocinfo/linux"
+	"github.com/kaiserbh/gin-bot-go/model"
+	log "github.com/sirupsen/logrus"
 )
 
 // getArguments split the "parameter from a command
@@ -39,6 +40,7 @@ func checkPrefix(message string) bool {
 //     guildID    :  guildID of the member you wish to check the roles of
 //     userID     :  userID of the member you wish to retrieve
 //     permission :  the permission you wish to check for
+
 func memberHasPermission(s *discordgo.Session, guildID string, userID string, permission int64) (bool, error) {
 	member, err := s.State.Member(guildID, userID)
 	if err != nil {
@@ -115,7 +117,9 @@ func getBotMessageID(session *discordgo.Session, msgEvent *discordgo.MessageCrea
 
 // check skip backward reaction
 func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.MessageCreate, botMessageID string) (map[string]bool, error) {
+
 	checkReaction, err := session.MessageReactions(msgEvent.ChannelID, botMessageID, "⏮️", 10, botMessageID, "")
+
 	if err != nil {
 		log.Error("Failed to get message Reactions")
 		return map[string]bool{
@@ -139,6 +143,7 @@ func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.Messag
 			}, nil
 		}
 	}
+
 	// Check back reaction
 	checkReaction, err = session.MessageReactions(msgEvent.ChannelID, botMessageID, "◀️", 10, botMessageID, "")
 	if err != nil {
@@ -254,6 +259,8 @@ func checkUserReactionSelect(page int, currentTime time.Time, botMessageID strin
 			}).Info("Removing reactions time has been passed.")
 			err := session.MessageReactionsRemoveAll(msgEvent.ChannelID, botMessageID)
 			if err != nil {
+				log.Error("Failed to remove embeds", err)
+				return 0, err
 			}
 			previousAuthor = ""
 			return errorVal, err
