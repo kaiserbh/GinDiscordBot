@@ -723,6 +723,12 @@ func resetNickHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 					log.Error("Failed to add reaction: ", err)
 					return
 				}
+
+				err = s.ChannelMessageDelete(m.ChannelID, lastMessage)
+				if err != nil {
+					log.Error("Failed to remove user message: ", err)
+					return
+				}
 			}
 		}
 	}
