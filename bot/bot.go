@@ -67,10 +67,7 @@ func Start() {
 	goBot.AddHandler(botPing)
 	goBot.AddHandler(invite)
 
-	//TODO:Support get support invite link
-
-	//TODO:Source github repo
-
+	//TODO:Support get support invite linko
 	// anilistCommands
 	//TODO:anime Query anime from Anilist
 	//TODO:manga Query manga from Anilist
@@ -83,8 +80,6 @@ func Start() {
 	//TODO:permissions Show your permissions or the member specified.
 	//TODO:userinfo Show some information about yourself or the member specified.
 	//TODO:serverinfo Get some information about this server.
-
-	//TODO:
 
 	// Start bot with chan.
 	err = goBot.Open()
