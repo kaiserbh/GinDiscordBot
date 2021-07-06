@@ -67,9 +67,6 @@ func Start() {
 	goBot.AddHandler(botPing)
 	goBot.AddHandler(invite)
 
-	//TODO:Invite get invite link for the bot
-	//FINISHED:Invite link works for all bots
-
 	//TODO:Support get support invite link
 
 	//TODO:Source github repo
