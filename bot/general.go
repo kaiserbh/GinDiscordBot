@@ -69,7 +69,7 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 								SetTitle("Gin Help Menu").
 								SetThumbnail(botImage).
 								SetDescription("Gin is a feature rich Discord bot designed to bring FUN into your server or one would hope so...").
-								AddField("Invite", fmt.Sprintf("[Invite %s](https://discordapp.com/oauth2/authorize?client_id=%s&scope=bot&permissions=8)", s.State.User.Username, s.State.User.ID)).
+								AddField("Invite", fmt.Sprintf("[Invite %s%s](www.subaruxrem.fun)", s.State.User.Username, s.State.User.ID)).
 								AddField("Support Server", "[Gin Support](https://discord.gg/nkGvkUUqHZ)").
 								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
 								SetColor(green).MessageEmbed
@@ -256,8 +256,8 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 								SetTitle("Gin Help Menu").
 								SetThumbnail(botImage).
 								SetDescription("Gin is a feature rich Discord bot designed to bring FUN into your server or one would hope so...").
-								AddField("Invite", "https://www.google.com").
-								AddField("Support Server", "https://www.google.com").
+								AddField("Invite", fmt.Sprintf("[Invite %s%s](www.subaruxrem.fun)", s.State.User.Username, s.State.User.ID)).
+								AddField("Support Server", "[Gin Support](https://discord.gg/nkGvkUUqHZ)").
 								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
 								SetColor(green).MessageEmbed
 
