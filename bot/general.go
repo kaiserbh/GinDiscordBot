@@ -41,7 +41,6 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 							SetDescription("hmm, make sure you end the last instance of help menu before executing another one MADAO...").
 							SetColor(red).MessageEmbed
 
-						// add reaction to the message author
 						_, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
 						if err != nil {
 							log.Error("Failed to send embed to the channel: ", err)
@@ -428,8 +427,42 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		// user message ID
 		lastMessage := m.Message.ID
+
 		// check if it's nick or nickname since contains func will return both nickname and nick function.
-		if parameter[0] == guild.GuildPrefix+"nick" {
+		if strings.ToLower(parameter[0]) == guild.GuildPrefix+"nick" {
+
+			for _, authorID := range nickCoolDownAuthor {
+				// check if user is in the cooldownlist
+				if m.Author.ID == authorID {
+					embed := NewEmbed().
+						SetDescription("Too fast....").
+						SetColor(red).MessageEmbed
+
+					_, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
+					if err != nil {
+						log.Error("Failed to send embed to the channel: ", err)
+						return
+					}
+					botMessageID, err := getBotMessageID(s, m)
+					if err != nil {
+						log.Error("Failed to get bot message ID: ", err)
+						return
+					}
+					err = s.ChannelMessageDelete(m.ChannelID, botMessageID)
+					if err != nil {
+						log.Error("Failed to remove bot message: ", err)
+						return
+					}
+
+					err = s.ChannelMessageDelete(m.ChannelID, lastMessage)
+					if err != nil {
+						log.Error("Failed to remove user message: ", err)
+						return
+					}
+					return
+				}
+			}
+
 			// check if allowed channel.
 			if allowedChannels {
 				if strings.Contains(messageContent, guild.GuildPrefix+"nick") {
@@ -473,7 +506,40 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 					if allowedNickChange {
 						// do nothing if the user didn't provide arguments for nickname
 						if len(parameter) < 2 {
-							log.Info("Doing nothing since no arguments was provided")
+							timer := time.Now()
+							if user.AllowedNickChange {
+								embed := NewEmbed().
+									SetDescription("You can change your nickname. use `" + guild.GuildPrefix + "nick <desired nickname>` to change it.").
+									SetColor(green).MessageEmbed
+								_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+								if err != nil {
+									log.Warn("Failed to send embed to the channel: ", err)
+									return
+								}
+
+								for {
+									if time.Since(timer).Seconds() > 5 {
+										// bot messageID
+										botMessageID, err := getBotMessageID(s, m)
+										if err != nil {
+											log.Error("Failed to get bot message ID: ", err)
+											return
+										}
+										// delete user message and bot messages.
+										err = s.ChannelMessageDelete(m.ChannelID, botMessageID)
+										if err != nil {
+											log.Error("Failed to remove bot message: ", err)
+											return
+										}
+										err = s.ChannelMessageDelete(m.ChannelID, lastMessage)
+										if err != nil {
+											log.Error("Failed to remove user message: ", err)
+											return
+										}
+										return
+									}
+								}
+							}
 							return
 						}
 						// get the spaces as well.
@@ -539,16 +605,18 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 							return
 						}
 
-						// gets bot Message ID
-						botMessageID, err := getBotMessageID(s, m)
-						if err != nil {
-							log.Error("Failed to get botID")
-							return
-						}
+						nickCoolDownAuthor = append(nickCoolDownAuthor, m.Author.ID)
 
 						// for loop to check time passed before deleting user message and bot message.
 						for {
 							since := time.Since(timerToRemoveBotMessageAndUser).Seconds()
+
+							// bot messageIDs
+							botMessageIDs, err := getAllBotMessagesID(s, m)
+							if err != nil {
+								log.Error("Failed to get bot message IDs")
+								return
+							}
 
 							if since >= 10 {
 								log.WithFields(log.Fields{
@@ -559,29 +627,40 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 									log.Error("Failed to delete user message: ", err)
 									return
 								}
-								err = s.ChannelMessageDelete(m.ChannelID, botMessageID)
-								if err != nil {
-									log.Error("Failed to delete user message: ", err)
-									return
+								for _, val := range botMessageIDs {
+									err = s.ChannelMessageDelete(m.ChannelID, val)
+									if err != nil {
+										log.Error("Failed to delete user message: ", err)
+										return
+									}
+								}
+
+								for i, id := range nickCoolDownAuthor {
+									if id == m.Author.ID {
+										nickCoolDownAuthor = removeElementFromSlice(nickCoolDownAuthor, i)
+									}
 								}
 								return
 							}
 						}
 					} else {
+						nickCoolDownAuthor = append(nickCoolDownAuthor, m.Author.ID)
 						err = getTimeLeftForNick(s, m, "")
 						if err != nil {
 							log.Error("Failed to get time left for nick change")
 							return
 						}
-						// gets bot Message ID
-						botMessageID, err := getBotMessageID(s, m)
-						if err != nil {
-							log.Error("Failed to get botID")
-							return
-						}
+
 						// for loop to check time passed before deleting user message and bot message.
 						for {
 							since := time.Since(timerToRemoveBotMessageAndUser).Seconds()
+							// bot messageIDs
+							botMessageIDs, err := getAllBotMessagesID(s, m)
+							if err != nil {
+								log.Error("Failed to get bot message IDs")
+								return
+							}
+
 							if since >= 10 {
 								log.WithFields(log.Fields{
 									"time": since,
@@ -591,10 +670,18 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 									log.Error("Failed to delete user message: ", err)
 									return
 								}
-								err = s.ChannelMessageDelete(m.ChannelID, botMessageID)
-								if err != nil {
-									log.Error("Failed to delete user message: ", err)
-									return
+								for _, val := range botMessageIDs {
+									err = s.ChannelMessageDelete(m.ChannelID, val)
+									if err != nil {
+										log.Error("Failed to delete user message: ", err)
+										return
+									}
+								}
+								// remove user ID from cooldown
+								for i, id := range nickCoolDownAuthor {
+									if id == m.Author.ID {
+										nickCoolDownAuthor = removeElementFromSlice(nickCoolDownAuthor, i)
+									}
 								}
 								return
 							}
