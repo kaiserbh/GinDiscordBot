@@ -550,7 +550,10 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 						for {
 							since := time.Since(timerToRemoveBotMessageAndUser).Seconds()
 
-							if since >= 5 {
+							if since >= 10 {
+								log.WithFields(log.Fields{
+									"time": since,
+								}).Info("Removing bot message and user since time has been passed")
 								err = s.ChannelMessageDelete(m.ChannelID, lastMessage)
 								if err != nil {
 									log.Error("Failed to delete user message: ", err)
@@ -579,7 +582,10 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 						// for loop to check time passed before deleting user message and bot message.
 						for {
 							since := time.Since(timerToRemoveBotMessageAndUser).Seconds()
-							if since >= 5 {
+							if since >= 10 {
+								log.WithFields(log.Fields{
+									"time": since,
+								}).Info("Removing bot message and user since time has been passed")
 								err = s.ChannelMessageDelete(m.ChannelID, lastMessage)
 								if err != nil {
 									log.Error("Failed to delete user message: ", err)
