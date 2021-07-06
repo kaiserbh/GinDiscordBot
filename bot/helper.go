@@ -110,13 +110,30 @@ func getBotMessageID(session *discordgo.Session, msgEvent *discordgo.MessageCrea
 		log.Error("Failed to get messages from channel")
 		return "", err
 	}
-	if len(channelMessages) == 0 {
-		log.Error("Channel Messages is nil")
-		return "", err
-	} else {
-		botMessageID := channelMessages[0].ID
-		return botMessageID, nil
+
+	botMessageID := channelMessages[0].ID
+	return botMessageID, nil
+}
+
+// getAllBotMessagesID returns the last 100 messages from the bot.
+func getAllBotMessagesID(session *discordgo.Session, msgEvent *discordgo.MessageCreate) ([]string, error) {
+
+	var botMessagesID []string
+
+	// check the message if it's from the bot if it is ignore.
+	channelMessages, err := session.ChannelMessages(msgEvent.ChannelID, 100, "", "", "")
+	if err != nil {
+		log.Error("Failed to get messages from channel")
+		return []string{}, err
 	}
+
+	for _, message := range channelMessages {
+		if message.Author.ID == session.State.User.ID {
+			botMessagesID = append(botMessagesID, message.ID)
+		}
+	}
+
+	return botMessagesID, nil
 }
 
 // check skip backward reaction
@@ -497,4 +514,10 @@ func getTimeLeftForNick(s *discordgo.Session, m *discordgo.MessageCreate, messag
 
 	}
 	return nil
+}
+
+// removeElementFromSlice removes element from slice
+func removeElementFromSlice(s []string, i int) []string {
+	s[i] = s[len(s)-1]
+	return s[:len(s)-1]
 }
