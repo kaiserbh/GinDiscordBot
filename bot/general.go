@@ -256,8 +256,8 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 								SetTitle("Gin Help Menu").
 								SetThumbnail(botImage).
 								SetDescription("Gin is a feature rich Discord bot designed to bring FUN into your server or one would hope so...").
-								AddField("Invite", "https://www.google.com").
-								AddField("Support Server", "https://www.google.com").
+								AddField("Invite", fmt.Sprintf("[Invite %s](https://discordapp.com/oauth2/authorize?client_id=%s&scope=bot&permissions=8)", s.State.User.Username, s.State.User.ID)).
+								AddField("Support Server", "[Gin Support](https://discord.gg/nkGvkUUqHZ)").
 								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
 								SetColor(green).MessageEmbed
 
@@ -698,8 +698,9 @@ func invite(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if messageContent == guild.GuildPrefix+"invite" {
 				// start embed
 				embed := NewEmbed().
-					SetTitle("Gin invite link").SetURL("https://discord.com/api/oauth2/authorize?client_id=" + s.State.User.ID + "&permissions=8&scope=bot").
-					SetColor(green).MessageEmbed
+					SetTitle(fmt.Sprintf("Invite %s", s.State.User.Username)).
+					SetDescription(fmt.Sprintf("[link](https://discord.com/api/oauth2/authorize?client_id=%s&permissions=8&scope=bot)", s.State.User.ID)).
+					MessageEmbed
 
 				// add reaction to the message author
 
@@ -708,7 +709,6 @@ func invite(s *discordgo.Session, m *discordgo.MessageCreate) {
 					log.Error("Failed to send embed to the channel: ", err)
 					return
 				}
-
 			}
 		}
 	}
