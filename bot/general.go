@@ -799,7 +799,8 @@ func invite(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if messageContent == guild.GuildPrefix+"invite" {
 				// start embed
 				embed := NewEmbed().
-					SetTitle("Gin invite link").SetURL("https://discord.com/api/oauth2/authorize?client_id=" + s.State.User.ID + "&permissions=8&scope=bot").
+					SetTitle(fmt.Sprintf("Invite %s", s.State.User.Username)).
+					SetDescription(fmt.Sprintf("[link](https://discord.com/api/oauth2/authorize?client_id=%s&permissions=8&scope=bot)", s.State.User.ID)).
 					SetColor(green).MessageEmbed
 
 				// add reaction to the message author
