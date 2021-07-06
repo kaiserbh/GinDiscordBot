@@ -626,6 +626,7 @@ func resetNickHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				err = s.MessageReactionAdd(m.ChannelID, lastMessage, "✅")
 				if err != nil {
 					log.Error("Failed to add reaction: ", err)
+					return
 				}
 			}
 		}
@@ -664,13 +665,14 @@ func botPing(s *discordgo.Session, m *discordgo.MessageCreate) {
 			_, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
 			if err != nil {
 				log.Error("Failed to send embed to the channel: ", err)
+				return
 			}
 
 			// add reaction to the message author
 			err = s.MessageReactionAdd(m.ChannelID, m.Message.ID, "👋")
 			if err != nil {
 				log.Error("Failed to add reaction: ", err)
-
+				return
 			}
 		}
 	}
@@ -704,6 +706,7 @@ func invite(s *discordgo.Session, m *discordgo.MessageCreate) {
 				_, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
 				if err != nil {
 					log.Error("Failed to send embed to the channel: ", err)
+					return
 				}
 
 			}

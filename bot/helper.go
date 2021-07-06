@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/c9s/goprocinfo/linux"
 	"github.com/kaiserbh/gin-bot-go/model"
 	log "github.com/sirupsen/logrus"
 )
@@ -258,6 +259,8 @@ func checkUserReactionSelect(page int, currentTime time.Time, botMessageID strin
 			}).Info("Removing reactions time has been passed.")
 			err := session.MessageReactionsRemoveAll(msgEvent.ChannelID, botMessageID)
 			if err != nil {
+				log.Error("Failed to remove embeds", err)
+				return 0, err
 			}
 			previousAuthor = ""
 			return errorVal, err
@@ -373,7 +376,6 @@ func getCPUSample() (idle, total uint64) {
 	return
 }
 
-/*
 func getCpuUsage() (string, error) {
 	idle0, total0 := getCPUSample()
 	time.Sleep(1 * time.Second)
@@ -406,7 +408,6 @@ func getMemInfo() (string, error) {
 
 	return convertToString + "%", nil
 }
-*/
 
 func getTimeLeftForNick(s *discordgo.Session, m *discordgo.MessageCreate, message string) error {
 	// get guild info from DB
