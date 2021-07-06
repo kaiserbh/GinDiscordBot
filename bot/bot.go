@@ -68,6 +68,9 @@ func Start() {
 	goBot.AddHandler(botPing)
 	goBot.AddHandler(invite)
 
+	// adminCommands
+	goBot.AddHandler(ban)
+
 	//TODO:Support get support invite linko
 	// anilistCommands
 	//TODO:anime Query anime from Anilist
