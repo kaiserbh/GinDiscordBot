@@ -61,19 +61,16 @@ func Start() {
 
 	// generalCommands
 	go goBot.AddHandler(helpMessageHandler)
-	goBot.AddHandler(pingMessageHandler)
+	goBot.AddHandler(pingLatency)
 	goBot.AddHandler(stats)
 	goBot.AddHandler(setNick)
 	goBot.AddHandler(resetNickHandler)
 	goBot.AddHandler(botPing)
 	goBot.AddHandler(invite)
 
-	// adminCommands
-	goBot.AddHandler(ban)
-
-	//TODO:Support get support invite linko
 	// anilistCommands
 	//TODO:anime Query anime from Anilist
+	goBot.AddHandler(anime)
 	//TODO:manga Query manga from Anilist
 	//TODO:character Query character from Anilist
 	//TODO:staff Query person/staff from Anilist
