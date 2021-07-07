@@ -30,39 +30,101 @@ func ban(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	allowedChannels := checkAllowedChannel(m.ChannelID, guild)
-
+	messageContent := strings.ToLower(m.Content)
+	parameter := getArguments(messageContent)
 	if allowedChannels {
-		messageContent := strings.ToLower(m.Content)
-		parameter := getArguments(messageContent)
 
 		// If command matches syntax do blah
 
-		untrimmedTag := parameter[1]
-
-		member := strings.TrimSuffix(strings.TrimPrefix(untrimmedTag, "<@!"), ">")
-
 		if parameter[0] == guild.GuildPrefix+command {
 
-			// Ban member
-			err := s.GuildBanCreate(m.GuildID, member, 0)
+			switch {
+			case len(parameter) == 2:
+				// Ban member
+				err := s.GuildBanCreate(m.GuildID, strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">"), 0)
 
-			if err != nil {
-				log.Error(fmt.Sprintf("Error banning member %s: ", member), err)
+				if err != nil {
+					log.Error(fmt.Sprintf("Error banning member %s: ", strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">")), err)
+					return
+				}
+				log.Info(fmt.Sprintf("Banned member %s", strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">")))
+
+				// Initialize embed
+				embed := NewEmbed().
+					SetDescription(fmt.Sprintf("Banned member %s", strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">"))).
+					SetColor(red).
+					MessageEmbed
+
+				_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+
+				if err != nil {
+					log.Error("Error sending embed: ", err)
+					return
+				}
 				return
-			}
-			log.Info(fmt.Sprintf("Banned member %s", member))
 
-			// Initialize embed
-			embed := NewEmbed().
-				SetDescription(fmt.Sprintf("Banned member %s", member)).
-				SetColor(red).
-				MessageEmbed
+			case len(parameter) == 3:
 
-			_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+				err := s.GuildBanCreateWithReason(m.GuildID, strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">"), parameter[2], 0)
 
-			if err != nil {
-				log.Error("Error sending embed: ", err)
-				return
+				if err != nil {
+					log.Error(fmt.Sprintf("Error banning member %s with reason", strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">")))
+					return
+				}
+
+				log.Info("Banned member %s with reason %s", strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">"), parameter[2])
+
+				embed := NewEmbed().
+					SetDescription(fmt.Sprintf("Banned member %s with reason %s", strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">"), parameter[2])).
+					SetColor(red).
+					MessageEmbed
+
+				_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+
+				if err != nil {
+					log.Error("Error sending embed: ", err)
+					return
+				}
+
+			case len(parameter) == 4:
+				err := s.GuildBanCreate(m.GuildID, strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">"), 0)
+				if err != nil {
+					log.Error(fmt.Sprintf("Error banning member %s ", strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">")), err)
+					return
+				}
+
+				embed := NewEmbed().
+					SetDescription(fmt.Sprintf("Banned member %s for %s %s", strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">"), parameter[2], parameter[3])).
+					SetColor(red).
+					MessageEmbed
+
+				_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+
+				if err != nil {
+					log.Error("Error sending embed: ", err)
+					return
+				}
+
+			case len(parameter) == 5:
+				err := s.GuildBanCreateWithReason(m.GuildID, strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">"), parameter[4], 0)
+
+				if err != nil {
+					log.Error("Error banning member %s with reason %s", strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">"), parameter[4])
+					return
+				}
+
+				embed := NewEmbed().
+					SetDescription(fmt.Sprintf("Banned member **%s** for **%s %s** with reason **%s**", strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">"), parameter[2], parameter[3], parameter[4])).
+					AddField("Reason:", parameter[4]).
+					SetColor(red).
+					MessageEmbed
+
+				_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+
+				if err != nil {
+					log.Error("Error sending embed: ", err)
+					return
+				}
 			}
 		}
 	}
@@ -98,20 +160,16 @@ func pardon(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		// If command matches syntax do blah
 
-		untrimmedTag := parameter[1]
-
-		member := strings.TrimSuffix(strings.TrimPrefix(untrimmedTag, "<@!"), ">")
-
 		if parameter[0] == guild.GuildPrefix+command {
-			err := s.GuildBanDelete(m.GuildID, member)
+			err := s.GuildBanDelete(m.GuildID, strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">"))
 			if err != nil {
-				log.Error(fmt.Sprintf("Error pardoning member %s: ", member), err)
+				log.Error(fmt.Sprintf("Error pardoning member %s: ", strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">")), err)
 				return
 			}
-			log.Info(fmt.Sprintf("Pardoned member %s", member))
+			log.Info(fmt.Sprintf("Pardoned member %s", strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">")))
 
 			embed := NewEmbed().
-				SetDescription(fmt.Sprintf("Pardoned member %s", member)).
+				SetDescription(fmt.Sprintf("Pardoned member %s", strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">"))).
 				SetColor(red).
 				MessageEmbed
 
