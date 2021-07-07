@@ -67,12 +67,19 @@ func Start() {
 	goBot.AddHandler(botPing)
 	goBot.AddHandler(invite)
 
+<<<<<<< Updated upstream
 	//TODO:Invite get invite link for the bot
 	//FINISHED:Invite link works for all bots
 
 	//TODO:Support get support invite link
 
 	//TODO:Source github repo
+=======
+	// adminCommands
+	goBot.AddHandler(ban)
+	goBot.AddHandler(pardon)
+	//goBot.AddHandler(test)
+>>>>>>> Stashed changes
 
 	// anilistCommands
 	//TODO:anime Query anime from Anilist
