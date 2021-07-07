@@ -136,8 +136,23 @@ func getAllBotMessagesID(session *discordgo.Session, msgEvent *discordgo.Message
 	return botMessagesID, nil
 }
 
-// check skip backward reaction
-func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.MessageCreate, botMessageID string) (map[string]bool, error) {
+//checkMessageReactionAuthor check reactions for help menu
+func checkMessageReactionAuthor(session *discordgo.Session, channelID, botMessageID, emojiID, authorID string, limit int) (bool, error) {
+	checkReaction, err := session.MessageReactions(channelID, botMessageID, emojiID, limit, botMessageID, "")
+	if err != nil {
+		log.Error("Failed to get message reactions: ", err)
+		return false, err
+	}
+	for _, reactions := range checkReaction {
+		if reactions.ID == authorID {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+//checkHelpMenuReactions check reactions for help menu
+func checkHelpMenuReactions(session *discordgo.Session, msgEvent *discordgo.MessageCreate, botMessageID string) (map[string]bool, error) {
 
 	checkReaction, err := session.MessageReactions(msgEvent.ChannelID, botMessageID, "⏮️", 10, botMessageID, "")
 
@@ -287,7 +302,7 @@ func checkUserReactionSelect(page int, currentTime time.Time, botMessageID strin
 			return errorVal, err
 		}
 		// check if the reaction matches the author ID aka sender
-		checkReaction, err := checkMessageReaction(session, msgEvent, botMessageID)
+		checkReaction, err := checkHelpMenuReactions(session, msgEvent, botMessageID)
 		if err != nil {
 			log.Error("Failed to check emoji from bot message:", err)
 			return errorVal, err
