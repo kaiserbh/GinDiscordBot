@@ -59,15 +59,18 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 						SetDescription(anime.Description).
 						SetColor(green).MessageEmbed
 
+					_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+					if err != nil {
+						log.Error("Failed to send embed to the channel: ", err)
+					}
+
+					// make sure the bot messageID is taken after it's being sent.
 					botMessageID, err := getBotMessageID(s, m)
 					if err != nil {
 						log.Error("Failed to get bot message ID: ", err)
 						return
 					}
-					_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
-					if err != nil {
-						log.Error("Failed to send embed to the channel: ", err)
-					}
+
 					err = s.MessageReactionAdd(m.ChannelID, botMessageID, "✅")
 					if err != nil {
 						log.Error("Failed to add reaction: ", err)
@@ -134,15 +137,17 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 						SetDescription(anime.Description).
 						SetColor(green).MessageEmbed
 
+					_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+					if err != nil {
+						log.Error("Failed to send embed to the channel: ", err)
+					}
+
 					botMessageID, err := getBotMessageID(s, m)
 					if err != nil {
 						log.Error("Failed to get bot message ID: ", err)
 						return
 					}
-					_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
-					if err != nil {
-						log.Error("Failed to send embed to the channel: ", err)
-					}
+
 					err = s.MessageReactionAdd(m.ChannelID, botMessageID, "✅")
 					if err != nil {
 						log.Error("Failed to add reaction: ", err)
