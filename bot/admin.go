@@ -36,6 +36,7 @@ func ban(s *discordgo.Session, m *discordgo.MessageCreate) {
 		parameter := getArguments(messageContent)
 
 		// If command matches syntax do blah
+
 		untrimmedTag := parameter[1]
 
 		member := strings.TrimSuffix(strings.TrimPrefix(untrimmedTag, "<@!"), ">")
@@ -98,6 +99,7 @@ func pardon(s *discordgo.Session, m *discordgo.MessageCreate) {
 		// If command matches syntax do blah
 
 		untrimmedTag := parameter[1]
+
 		member := strings.TrimSuffix(strings.TrimPrefix(untrimmedTag, "<@!"), ">")
 
 		if parameter[0] == guild.GuildPrefix+command {
