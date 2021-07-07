@@ -288,8 +288,8 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-// pingMessageHandler pings the bot
-func pingMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
+// pingLatency pings the bot to get latency to discord server.
+func pingLatency(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Checks if the message has prefix from the database file.
 	guild, err := db.FindGuildByID(m.GuildID)
 	if err != nil {
@@ -773,7 +773,7 @@ func botPing(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-// pingMessageHandler pings the bot
+// invite sends invite link for the bot
 func invite(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Checks if the message has prefix from the database file.
 	guild, err := db.FindGuildByID(m.GuildID)
@@ -787,14 +787,16 @@ func invite(s *discordgo.Session, m *discordgo.MessageCreate) {
 		// check if the channel is bot channel or allowed channel.
 		allowedChannels := checkAllowedChannel(m.ChannelID, guild)
 		if allowedChannels {
+			// if the message is from the bot
 			if m.Author.ID == s.State.User.ID {
 				return
 			}
 			if messageContent == guild.GuildPrefix+"invite" {
 				// start embed
 				embed := NewEmbed().
-					SetTitle(fmt.Sprintf("Invite %s", s.State.User.Username)).
-					SetDescription(fmt.Sprintf("[link](https://discord.com/api/oauth2/authorize?client_id=%s&permissions=8&scope=bot)", s.State.User.ID)).
+					SetTitle("Gin invite link").
+					SetURL("https://discord.com/api/oauth2/authorize?client_id=" + s.State.User.ID +
+						"&permissions=4228906231&scope=bot").
 					SetColor(green).MessageEmbed
 
 				// add reaction to the message author
