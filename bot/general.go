@@ -714,6 +714,8 @@ func invite(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+// Gaki command disabled
+/*
 func gaki(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	// Checks if the message has prefix from the database file.
@@ -747,3 +749,35 @@ func gaki(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	}
 }
+*/
+/*
+func test(s *discordgo.Session, m *discordgo.MessageCreate) {
+
+	// Checks if the message has prefix from the database file.
+
+	messageContent := strings.ToLower(m.Content)
+
+	// check if the channel is bot channel or allowed channel.
+
+	if m.Author.ID == s.State.User.ID {
+		return
+	}
+
+	if strings.Contains(messageContent, "test") {
+		// start embed
+		_, err := s.ChannelMessageSend(m.ChannelID, "test")
+
+		if err != nil {
+			log.Error("Failed to send embed to the channel: ", err)
+			return
+		}
+
+		// add reaction to the message author
+		err = s.MessageReactionAdd(m.ChannelID, m.Message.ID, ":smirk~1:862978313655156766")
+		if err != nil {
+			log.Error("Failed to add reaction: ", err)
+			return
+		}
+	}
+}
+*/
