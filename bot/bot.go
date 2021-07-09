@@ -66,7 +66,7 @@ func Start() {
 	goBot.AddHandler(resetNickHandler)
 	goBot.AddHandler(botPing)
 	goBot.AddHandler(invite)
-	goBot.AddHandler(gaki)
+	//goBot.AddHandler(gaki)
 
 	// adminCommands
 	goBot.AddHandler(ban)
