@@ -728,8 +728,11 @@ func gaki(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if strings.Contains(messageContent, "gaki") {
 		// start embed
-
-		_, err := s.ChannelMessageSend(m.ChannelID, "Should go back to his dungeon")
+		embed := NewEmbed().
+			SetDescription("Should go back to his dungeon").
+			SetImage("https://media.discordapp.net/attachments/703063888241098832/745009187053895831/8CFoRfV0IXScYAAAAASUVORK5CYII.png?width=400&height=226").
+			MessageEmbed
+		_, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
 
 		if err != nil {
 			log.Error("Failed to send embed to the channel: ", err)
@@ -737,7 +740,7 @@ func gaki(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		// add reaction to the message author
-		err = s.MessageReactionAdd(m.ChannelID, m.Message.ID, "<:smirk:862984950109700126>")
+		err = s.MessageReactionAdd(m.ChannelID, m.Message.ID, ":smirk~1:862978313655156766")
 		if err != nil {
 			log.Error("Failed to add reaction: ", err)
 			return
