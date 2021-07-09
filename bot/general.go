@@ -678,7 +678,7 @@ func botPing(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-// pingMessageHandler pings the bot
+// invite fetches bot invite
 func invite(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Checks if the message has prefix from the database file.
 	guild, err := db.FindGuildByID(m.GuildID)
@@ -710,6 +710,37 @@ func invite(s *discordgo.Session, m *discordgo.MessageCreate) {
 					return
 				}
 			}
+		}
+	}
+}
+
+func gaki(s *discordgo.Session, m *discordgo.MessageCreate) {
+
+	// Checks if the message has prefix from the database file.
+
+	messageContent := strings.ToLower(m.Content)
+
+	// check if the channel is bot channel or allowed channel.
+
+	if m.Author.ID == s.State.User.ID {
+		return
+	}
+
+	if strings.Contains(messageContent, "gaki") {
+		// start embed
+
+		_, err := s.ChannelMessageSend(m.ChannelID, "Should go back to his dungeon")
+
+		if err != nil {
+			log.Error("Failed to send embed to the channel: ", err)
+			return
+		}
+
+		// add reaction to the message author
+		err = s.MessageReactionAdd(m.ChannelID, m.Message.ID, "<:smirk:862984950109700126>")
+		if err != nil {
+			log.Error("Failed to add reaction: ", err)
+			return
 		}
 	}
 }
