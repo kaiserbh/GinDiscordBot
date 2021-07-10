@@ -189,3 +189,43 @@ func pardon(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	}
 }
+
+// Gaki command disabled
+
+func gaki(s *discordgo.Session, m *discordgo.MessageCreate) {
+
+	// Checks if the message has prefix from the database file.
+
+	messageContent := strings.ToLower(m.Content)
+
+	// check if the channel is bot channel or allowed channel.
+
+	if m.Author.ID == s.State.User.ID {
+		return
+	}
+
+	if strings.Contains(messageContent, "gaki") {
+		// start embed
+		embed := NewEmbed().
+			SetDescription("Should go back to his dungeon").
+			SetImage("https://media.discordapp.net/attachments/703063888241098832/745009187053895831/8CFoRfV0IXScYAAAAASUVORK5CYII.png?width=400&height=226").
+			MessageEmbed
+		_, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
+
+		if err != nil {
+			log.Error("Failed to send embed to the channel: ", err)
+			return
+		}
+
+		// add reaction to the message author
+		err = s.MessageReactionAdd(m.ChannelID, m.Message.ID, ":smirk~1:862978313655156766")
+		if err != nil {
+			log.Error("Failed to add reaction: ", err)
+			return
+		}
+	}
+}
+
+// func chatFilter(s *discordgo.Session, m *discordgo.MessageCreate) {
+// 	Filter()
+// }
