@@ -536,3 +536,58 @@ func removeElementFromSlice(s []string, i int) []string {
 	s[i] = s[len(s)-1]
 	return s[:len(s)-1]
 }
+
+func convertStringHexColorToInt(data string) (int, error) {
+	animeColor := strings.Replace(data, "#", "", -1)
+	animeColorHex, err := strconv.ParseInt(animeColor, 16, 64)
+	if err != nil {
+		log.Error("Failed to convert string to int: ", err)
+		return 0, err
+	}
+
+	return int(animeColorHex), nil
+}
+
+func convMonthIntToStr(year string) string {
+	switch year {
+	case "1":
+		year = "Jan"
+		break
+
+	case "2":
+		year = "Feb"
+		break
+
+	case "3":
+		year = "Mar"
+		break
+	case "4":
+		year = "Apr"
+		break
+	case "5":
+		year = "May"
+		break
+	case "6":
+		year = "Jun"
+		break
+	case "7":
+		year = "Jul"
+		break
+	case "8":
+		year = "Aug"
+		break
+	case "9":
+		year = "Sep"
+		break
+	case "10":
+		year = "Oct"
+		break
+	case "11":
+		year = "Nov"
+		break
+	case "12":
+		year = "Dec"
+		break
+	}
+	return year
+}
