@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/kaiserbh/anilistgo"
 	log "github.com/sirupsen/logrus"
@@ -94,6 +95,7 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 								log.Error("Failed to remove reactions from bot message: ", err)
 								return
 							}
+							return
 						}
 
 						// check the delete reaction
@@ -109,6 +111,7 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 								log.Error("Failed to delete botMessage: ", err)
 								return
 							}
+							return
 						}
 						// if no reactions is added then just remove reactions from the message.
 						if passedTimer >= 10 {
@@ -117,8 +120,8 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 								log.Error("Failed to remove reactions from bot message: ", err)
 								return
 							}
+							return
 						}
-						return
 					}
 				} else {
 					// query anime by title
@@ -128,14 +131,43 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 						log.Error("Failed to filter anime by ID: ", err)
 						return
 					}
+					split := strings.Split(anime.Description, ".")
+					descriptionCut := strings.Join(split[0:4], ".") + "."
+					animeColorHex, err := convertStringHexColorToInt(anime.CoverImage.Color)
+					if err != nil {
+						log.Error("Failed to get anime Color hex: ", err)
+						return
+					}
+					animeStartMonth := strconv.Itoa(anime.StartDate.Month)
+					animeStartDay := strconv.Itoa(anime.StartDate.Day) + ","
+					animeStartYear := strconv.Itoa(anime.StartDate.Year)
+
+					animeMonthString := convMonthIntToStr(animeStartMonth) + " "
+					startDate := animeMonthString + animeStartDay + animeStartYear
+
+					averageScore := strconv.Itoa(anime.AverageScore) + "%"
+					meanScore := strconv.Itoa(anime.MeanScore) + "%"
+					popularity := strconv.Itoa(anime.Popularity)
+
+					fmt.Println(anime.Studio)
 
 					// start embed
 					embed := NewEmbed().
-						SetTitle("Anime").
+						SetTitle(anime.Title.English).
+						SetURL(anime.SiteURL).
+						SetAuthor("Anilist", "https://anilist.co/img/logo_al.png").
 						SetImage(anime.BannerImage).
-						SetThumbnail(anime.CoverImage.Large).
-						SetDescription(anime.Description).
-						SetColor(green).MessageEmbed
+						SetThumbnail(anime.CoverImage.ExtraLarge).
+						SetDescription(descriptionCut).
+						AddField("Format", anime.MediaFormat).
+						AddField("Status", anime.Status).
+						AddField("Start Date", startDate).
+						AddField("Season", anime.Season).
+						AddField("Average Score", averageScore).
+						AddField("Mean Score", meanScore).
+						AddField("Popularity", popularity).
+						SetFooter(anime.Title.Romaji, anime.CoverImage.ExtraLarge).
+						SetColor(animeColorHex).MessageEmbed
 
 					_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
 					if err != nil {
@@ -171,6 +203,7 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 								log.Error("Failed to remove reactions from bot message: ", err)
 								return
 							}
+							return
 						}
 
 						// check the delete reaction
@@ -186,16 +219,17 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 								log.Error("Failed to delete botMessage: ", err)
 								return
 							}
+							return
 						}
 						// if no reactions is added then just remove reactions from the message.
-						if passedTimer >= 10 {
+						if passedTimer >= 30 {
 							err = s.MessageReactionsRemoveAll(m.ChannelID, botMessageID)
 							if err != nil {
 								log.Error("Failed to remove reactions from bot message: ", err)
 								return
 							}
+							return
 						}
-						return
 					}
 				}
 			}
