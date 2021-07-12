@@ -149,7 +149,7 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 					meanScore := strconv.Itoa(anime.MeanScore) + "%"
 					popularity := strconv.Itoa(anime.Popularity)
 
-					fmt.Println(anime.Studio)
+					fmt.Println(anime.Studios)
 
 					// start embed
 					embed := NewEmbed().
