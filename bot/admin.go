@@ -169,11 +169,14 @@ func pardon(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if parameter[0] == guild.GuildPrefix+command {
 				err := s.GuildBanDelete(m.GuildID, strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">"))
 				if err != nil {
-					log.Error(fmt.Sprintf("Error pardoning member %s: ", strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">")), err)
+					log.WithFields(log.Fields{
+						"User": strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">"),
+					}).Error("Error Pardoning member: ", err)
 					return
 				}
-				log.Info(fmt.Sprintf("Pardoned member %s", strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">")))
-
+				log.WithFields(log.Fields{
+					"User": strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">"),
+				}).Info("Pardoned member")
 				embed := NewEmbed().
 					SetDescription(fmt.Sprintf("Pardoned member %s", strings.TrimSuffix(strings.TrimPrefix(parameter[1], "<@!"), ">"))).
 					SetColor(green).
