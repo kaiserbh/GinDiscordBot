@@ -49,6 +49,8 @@ github.com/jmespath/go-jmespath/internal/testify v1.5.1/go.mod h1:L3OGu8Wl2/fWfC
 github.com/joho/godotenv v1.3.0/go.mod h1:7hK45KPybAkOC6peb+G5yklZfMxEjkZhHbwpqxOKXbg=
 github.com/kaiserbh/anilistgo v0.0.7 h1:82qor4hnPWraUmp3S/OVJb15AE3npxpgbPUBvMOIbSk=
 github.com/kaiserbh/anilistgo v0.0.7/go.mod h1:5dQ+wlW5dIcOD0PEmgCzbu7vKxKOlgocHKtw4VizYyM=
+github.com/kaiserbh/anilistgo v0.1.0 h1:Pbszo0sz2OrQiLjuaYEhN7hO74Tei5E6JucOrjRpBsY=
+github.com/kaiserbh/anilistgo v0.1.0/go.mod h1:5dQ+wlW5dIcOD0PEmgCzbu7vKxKOlgocHKtw4VizYyM=
 github.com/karrick/godirwalk v1.8.0/go.mod h1:H5KPZjojv4lE+QYImBI8xVtrBRgYrIVsaRPx4tDPEn4=
 github.com/karrick/godirwalk v1.10.3/go.mod h1:RoGL9dQei4vP9ilrpETWE8CLOZ1kiN0LhBygSwrAsHA=
 github.com/klauspost/compress v1.9.5 h1:U+CaK85mrNNb4k8BNOfgJtJ/gr6kswUCFj6miSzVC6M=
