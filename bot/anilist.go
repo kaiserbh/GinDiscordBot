@@ -102,6 +102,10 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 						anime.Season = "\u200b"
 					}
 
+					if anime.Source == "" {
+						anime.Source = "\u200b"
+					}
+
 					description, startDate, endDate := anilistAnimeData(anime)
 
 					// start embed
@@ -199,6 +203,10 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 					if anime.Season == "" {
 						anime.Season = "\u200b"
+					}
+
+					if anime.Source == "" {
+						anime.Source = "\u200b"
 					}
 
 					description, startDate, endDate := anilistAnimeData(anime)
