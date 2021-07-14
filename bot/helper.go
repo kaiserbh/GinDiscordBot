@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"github.com/kaiserbh/anilistgo"
 	"io/ioutil"
 	"strconv"
 	"strings"
@@ -107,7 +108,11 @@ func getBotMessageID(session *discordgo.Session, msgEvent *discordgo.MessageCrea
 	// add bot last message to the array after the author ID.
 	channelMessages, err := session.ChannelMessages(msgEvent.ChannelID, 1, "", msgEvent.Message.ID, "")
 	if err != nil {
-		log.Error("Failed to get messages from channel")
+		log.Error("Failed to get messages from channel:", err)
+		return "", err
+	}
+
+	if len(channelMessages) <= 0 {
 		return "", err
 	}
 
@@ -136,8 +141,23 @@ func getAllBotMessagesID(session *discordgo.Session, msgEvent *discordgo.Message
 	return botMessagesID, nil
 }
 
-// check skip backward reaction
-func checkMessageReaction(session *discordgo.Session, msgEvent *discordgo.MessageCreate, botMessageID string) (map[string]bool, error) {
+//checkMessageReactionAuthor check reactions for help menu
+func checkMessageReactionAuthor(session *discordgo.Session, channelID, botMessageID, emojiID, authorID string, limit int) (bool, error) {
+	checkReaction, err := session.MessageReactions(channelID, botMessageID, emojiID, limit, botMessageID, "")
+	if err != nil {
+		log.Error("Failed to get message reactions: ", err)
+		return false, err
+	}
+	for _, reactions := range checkReaction {
+		if reactions.ID == authorID {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+//checkHelpMenuReactions check reactions for help menu
+func checkHelpMenuReactions(session *discordgo.Session, msgEvent *discordgo.MessageCreate, botMessageID string) (map[string]bool, error) {
 
 	checkReaction, err := session.MessageReactions(msgEvent.ChannelID, botMessageID, "⏮️", 10, botMessageID, "")
 
@@ -287,7 +307,7 @@ func checkUserReactionSelect(page int, currentTime time.Time, botMessageID strin
 			return errorVal, err
 		}
 		// check if the reaction matches the author ID aka sender
-		checkReaction, err := checkMessageReaction(session, msgEvent, botMessageID)
+		checkReaction, err := checkHelpMenuReactions(session, msgEvent, botMessageID)
 		if err != nil {
 			log.Error("Failed to check emoji from bot message:", err)
 			return errorVal, err
@@ -520,4 +540,180 @@ func getTimeLeftForNick(s *discordgo.Session, m *discordgo.MessageCreate, messag
 func removeElementFromSlice(s []string, i int) []string {
 	s[i] = s[len(s)-1]
 	return s[:len(s)-1]
+}
+
+func convertStringHexColorToInt(data string) (int, error) {
+	animeColor := strings.Replace(data, "#", "", -1)
+	animeColorHex, err := strconv.ParseInt(animeColor, 16, 64)
+	if err != nil {
+		log.Error("Failed to convert string to int: ", err)
+		return 0, err
+	}
+
+	return int(animeColorHex), nil
+}
+
+func convMonthIntToStr(year string) string {
+	switch year {
+	case "1":
+		year = "Jan"
+		break
+
+	case "2":
+		year = "Feb"
+		break
+
+	case "3":
+		year = "Mar"
+		break
+	case "4":
+		year = "Apr"
+		break
+	case "5":
+		year = "May"
+		break
+	case "6":
+		year = "Jun"
+		break
+	case "7":
+		year = "Jul"
+		break
+	case "8":
+		year = "Aug"
+		break
+	case "9":
+		year = "Sep"
+		break
+	case "10":
+		year = "Oct"
+		break
+	case "11":
+		year = "Nov"
+		break
+	case "12":
+		year = "Dec"
+		break
+	}
+	return year
+}
+
+func checkAnilistTimer(session *discordgo.Session, channelID, botMessageID, authorID string) {
+	// add reaction to bot message.
+	err := session.MessageReactionAdd(channelID, botMessageID, "✅")
+	if err != nil {
+		log.Error("Failed to add reaction: ", err)
+		return
+	}
+	err = session.MessageReactionAdd(channelID, botMessageID, "❌")
+	if err != nil {
+		log.Error("Failed to add reaction: ", err)
+		return
+	}
+
+	startTimer := time.Now()
+
+	for {
+		passedTimer := time.Since(startTimer).Seconds()
+		checkAuthorReactionOk, err := checkMessageReactionAuthor(session, channelID, botMessageID, "✅", authorID, 10)
+		if err != nil {
+			log.Error(err)
+			return
+		}
+		if checkAuthorReactionOk {
+			err = session.MessageReactionsRemoveAll(channelID, botMessageID)
+			if err != nil {
+				log.Error("Failed to remove reactions from bot message: ", err)
+				return
+			}
+			return
+		}
+
+		// check the delete reaction
+		checkAuthorReactionDelete, err := checkMessageReactionAuthor(session, channelID, botMessageID, "❌", authorID, 10)
+		if err != nil {
+			log.Error("Failed to check author author reaction: ", err)
+			return
+		}
+
+		if checkAuthorReactionDelete {
+			err := session.ChannelMessageDelete(channelID, botMessageID)
+			if err != nil {
+				log.Error("Failed to delete botMessage: ", err)
+				return
+			}
+			return
+		}
+		// if no reactions is added then just remove reactions from the message.
+		if passedTimer >= 30 {
+			err = session.MessageReactionsRemoveAll(channelID, botMessageID)
+			if err != nil {
+				log.Error("Failed to remove reactions from bot message: ", err)
+				return
+			}
+			return
+		}
+	}
+}
+
+func anilistAnimeData(media *anilistgo.Media) (string, string, string) {
+	descriptionCut := cutDescription(media.Description)
+
+	// start date
+	animeStartMonth := strconv.Itoa(media.StartDate.Month)
+	animeStartDay := strconv.Itoa(media.StartDate.Day) + ","
+	animeStartYear := strconv.Itoa(media.StartDate.Year)
+	animeStartMonthString := convMonthIntToStr(animeStartMonth) + " "
+	startDate := animeStartMonthString + animeStartDay + animeStartYear
+
+	// end date
+	animeEndMonth := strconv.Itoa(media.EndDate.Month)
+	animeEndDay := strconv.Itoa(media.EndDate.Day) + ","
+	animeEndYear := strconv.Itoa(media.EndDate.Year)
+	animeEndMonthString := convMonthIntToStr(animeEndMonth) + " "
+	endDate := animeEndMonthString + animeEndDay + animeEndYear
+
+	return descriptionCut, startDate, endDate
+}
+
+func cutDescription(description string) string {
+
+	split := strings.Split(description, ".")
+	amount := len(split)
+
+	var descriptionCut string
+
+	switch amount {
+	case 0:
+		descriptionCut = "NULL"
+		break
+	case 1:
+		descriptionCut = strings.Join(split[0:1], ".") + "."
+		break
+	case 2:
+		descriptionCut = strings.Join(split[0:2], ".") + "."
+		break
+	case 3:
+		descriptionCut = strings.Join(split[0:3], ".") + "."
+		break
+	case 4:
+		descriptionCut = strings.Join(split[0:4], ".") + "."
+		break
+	case 5:
+		descriptionCut = strings.Join(split[0:5], ".") + "."
+		break
+	case 6:
+		descriptionCut = strings.Join(split[0:6], ".") + "."
+		break
+	case 7:
+		descriptionCut = strings.Join(split[0:7], ".") + "."
+		break
+	case 8:
+		descriptionCut = strings.Join(split[0:8], ".") + "."
+		break
+	default:
+		descriptionCut = strings.Join(split[0:9], ".") + "."
+		break
+	}
+
+	return descriptionCut
 }

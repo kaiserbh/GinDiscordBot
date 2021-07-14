@@ -70,7 +70,7 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 								SetDescription("Gin is a feature rich Discord bot designed to bring FUN into your server or one would hope so...").
 								AddField("Invite", fmt.Sprintf("[Invite %s](https://discord.com/oauth2/authorize?"+
 									"client_id=854839186287493151&permissions=4228906231&scope=bot)", s.State.User.Username)).
-								AddField("Support Server", "[Gin Support](https://discord.gg/nkGvkUUqHZ)").
+								AddField("Support Server", "[Gin Support](https://discord.gg/SD2D6Y8RaC)").
 								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
 								SetColor(green).MessageEmbed
 
@@ -187,7 +187,6 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 								AddField("manga", "Query manga from Anilist").
 								AddField("character", "Query character from Anilist").
 								AddField("staff", "Query person/staff from Anilist").
-								AddField("studio", "Query studio from Anilist").
 								AddField("user", "Query user from Anilist").
 								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
 								SetColor(green).MessageEmbed
@@ -288,8 +287,8 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-// pingMessageHandler pings the bot
-func pingMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
+// pingLatency pings the bot to get latency to discord server.
+func pingLatency(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Checks if the message has prefix from the database file.
 	guild, err := db.FindGuildByID(m.GuildID)
 	if err != nil {
@@ -773,7 +772,7 @@ func botPing(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-// pingMessageHandler pings the bot
+// invite sends invite link for the bot
 func invite(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Checks if the message has prefix from the database file.
 	guild, err := db.FindGuildByID(m.GuildID)
@@ -787,13 +786,16 @@ func invite(s *discordgo.Session, m *discordgo.MessageCreate) {
 		// check if the channel is bot channel or allowed channel.
 		allowedChannels := checkAllowedChannel(m.ChannelID, guild)
 		if allowedChannels {
+			// if the message is from the bot
 			if m.Author.ID == s.State.User.ID {
 				return
 			}
 			if messageContent == guild.GuildPrefix+"invite" {
 				// start embed
 				embed := NewEmbed().
-					SetTitle("Gin invite link").SetURL("https://discord.com/api/oauth2/authorize?client_id=" + s.State.User.ID + "&permissions=8&scope=bot").
+					SetTitle("Gin invite link").
+					SetURL("https://discord.com/api/oauth2/authorize?client_id=" + s.State.User.ID +
+						"&permissions=4228906231&scope=bot").
 					SetColor(green).MessageEmbed
 
 				// add reaction to the message author

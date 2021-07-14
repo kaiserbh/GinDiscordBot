@@ -61,21 +61,19 @@ func Start() {
 
 	// generalCommands
 	go goBot.AddHandler(helpMessageHandler)
-	goBot.AddHandler(pingMessageHandler)
+	goBot.AddHandler(pingLatency)
 	goBot.AddHandler(stats)
 	goBot.AddHandler(setNick)
 	goBot.AddHandler(resetNickHandler)
 	goBot.AddHandler(botPing)
 	goBot.AddHandler(invite)
 
-	//TODO:Support get support invite linko
 	// anilistCommands
-	//TODO:anime Query anime from Anilist
-	//TODO:manga Query manga from Anilist
-	//TODO:character Query character from Anilist
-	//TODO:staff Query person/staff from Anilist
-	//TODO:studio Query studio from Anilist
-	//TODO:user Query user from Anilist
+	goBot.AddHandler(anime)
+	goBot.AddHandler(manga)
+	goBot.AddHandler(character)
+	goBot.AddHandler(staff)
+	goBot.AddHandler(user)
 
 	//miscellaneousCommands
 	//TODO:permissions Show your permissions or the member specified.
