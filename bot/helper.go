@@ -676,8 +676,13 @@ func anilistAnimeData(media *anilistgo.Media) (string, string, string) {
 }
 
 func cutDescription(description string) string {
+	var split []string
+	if strings.Contains(description, "!~") {
+		split = strings.Split(description, "!~")
+	} else {
+		split = strings.Split(description, ".")
+	}
 
-	split := strings.Split(description, ".")
 	amount := len(split)
 
 	var descriptionCut string
@@ -687,31 +692,37 @@ func cutDescription(description string) string {
 		descriptionCut = "NULL"
 		break
 	case 1:
-		descriptionCut = strings.Join(split[0:1], ".") + "."
+		descriptionCut = strings.Join(split[0:1], ".") + "||"
 		break
 	case 2:
-		descriptionCut = strings.Join(split[0:2], ".") + "."
+		descriptionCut = strings.Join(split[0:2], ".") + "||"
 		break
 	case 3:
-		descriptionCut = strings.Join(split[0:3], ".") + "."
+		descriptionCut = strings.Join(split[0:3], ".") + "||"
 		break
 	case 4:
-		descriptionCut = strings.Join(split[0:4], ".") + "."
+		descriptionCut = strings.Join(split[0:4], ".") + "||"
 		break
 	case 5:
-		descriptionCut = strings.Join(split[0:5], ".") + "."
+		descriptionCut = strings.Join(split[0:5], ".") + "||"
 		break
 	case 6:
-		descriptionCut = strings.Join(split[0:6], ".") + "."
+		descriptionCut = strings.Join(split[0:6], ".") + "||"
 		break
 	case 7:
-		descriptionCut = strings.Join(split[0:7], ".") + "."
+		descriptionCut = strings.Join(split[0:7], ".") + "||"
 		break
 	case 8:
-		descriptionCut = strings.Join(split[0:8], ".") + "."
+		descriptionCut = strings.Join(split[0:8], ".") + "||"
+		break
+	case 9:
+		descriptionCut = strings.Join(split[0:9], ".") + "||"
+		break
+	case 10:
+		descriptionCut = strings.Join(split[0:10], ".") + "||"
 		break
 	default:
-		descriptionCut = strings.Join(split[0:9], ".") + "."
+		descriptionCut = strings.Join(split[0:], ".")
 		break
 	}
 
