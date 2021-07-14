@@ -81,6 +81,9 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 					popularity := strconv.Itoa(anime.Popularity)
 
 					genres := strings.Join(anime.Genres, ",")
+					if genres == "" {
+						genres = "\u200b"
+					}
 
 					animeStudios := anime.Studios.Edges
 					var mainStudio string
@@ -89,6 +92,10 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 							mainStudio = studio.Node.Name
 							break
 						}
+					}
+
+					if mainStudio == "" {
+						mainStudio = "\u200b"
 					}
 
 					description, startDate, endDate := anilistAnimeData(anime)
@@ -169,6 +176,9 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 					popularity := strconv.Itoa(anime.Popularity)
 
 					genres := strings.Join(anime.Genres, ",")
+					if genres == "" {
+						genres = "\u200b"
+					}
 
 					animeStudios := anime.Studios.Edges
 					var mainStudio string
@@ -178,6 +188,7 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 							break
 						}
 					}
+
 					if mainStudio == "" {
 						mainStudio = "\u200b"
 					}
