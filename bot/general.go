@@ -600,7 +600,7 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 						// get how long time left
 						err = getTimeLeftForNick(s, m, "Successfully changed nickname for this server. \n")
 						if err != nil {
-							log.Error("Failed to get time left for nick change")
+							log.Error("Failed to get time left for nick change: ", err)
 							return
 						}
 
@@ -646,7 +646,7 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 						nickCoolDownAuthor = append(nickCoolDownAuthor, m.Author.ID)
 						err = getTimeLeftForNick(s, m, "")
 						if err != nil {
-							log.Error("Failed to get time left for nick change")
+							log.Error("Failed to get time left for nick change: ", err)
 							return
 						}
 
@@ -656,7 +656,7 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 							// bot messageIDs
 							botMessageIDs, err := getAllBotMessagesID(s, m)
 							if err != nil {
-								log.Error("Failed to get bot message IDs")
+								log.Error("Failed to get bot message IDs: ", err)
 								return
 							}
 
