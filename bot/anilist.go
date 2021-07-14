@@ -64,10 +64,16 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 						return
 					}
 
-					animeColorHex, err := convertStringHexColorToInt(anime.CoverImage.Color)
-					if err != nil {
-						log.Error("Failed to get media Color hex: ", err)
-						return
+					// making sure color hex is not empty
+					var animeColorHex int
+					if anime.CoverImage.Color == "" {
+						animeColorHex = green
+					} else {
+						animeColorHex, err = convertStringHexColorToInt(anime.CoverImage.Color)
+						if err != nil {
+							log.Error("Failed to get media Color hex: ", err)
+							return
+						}
 					}
 
 					averageScore := strconv.Itoa(anime.AverageScore) + "%"
@@ -146,10 +152,16 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 						return
 					}
-					animeColorHex, err := convertStringHexColorToInt(anime.CoverImage.Color)
-					if err != nil {
-						log.Error("Failed to get media Color hex: ", err)
-						return
+					// making sure color hex is not empty
+					var animeColorHex int
+					if anime.CoverImage.Color == "" {
+						animeColorHex = green
+					} else {
+						animeColorHex, err = convertStringHexColorToInt(anime.CoverImage.Color)
+						if err != nil {
+							log.Error("Failed to get media Color hex: ", err)
+							return
+						}
 					}
 
 					averageScore := strconv.Itoa(anime.AverageScore) + "%"
@@ -657,10 +669,16 @@ func staff(s *discordgo.Session, m *discordgo.MessageCreate) {
 						return
 					}
 
-					colorHex, err := convertStringHexColorToInt(staff.StaffMedia.Nodes[0].CoverImage.Color)
-					if err != nil {
-						log.Error("Failed to get media Color hex: ", err)
-						return
+					var colorHex int
+
+					if len(staff.StaffMedia.Nodes) == 0 {
+						colorHex = green
+					} else {
+						colorHex, err = convertStringHexColorToInt(staff.StaffMedia.Nodes[0].CoverImage.Color)
+						if err != nil {
+							log.Error("Failed to get media Color hex: ", err)
+							return
+						}
 					}
 
 					// start date
@@ -757,10 +775,15 @@ func staff(s *discordgo.Session, m *discordgo.MessageCreate) {
 						return
 					}
 
-					colorHex, err := convertStringHexColorToInt(staff.StaffMedia.Nodes[0].CoverImage.Color)
-					if err != nil {
-						log.Error("Failed to get media Color hex: ", err)
-						return
+					var colorHex int
+					if len(staff.StaffMedia.Nodes) == 0 {
+						colorHex = green
+					} else {
+						colorHex, err = convertStringHexColorToInt(staff.StaffMedia.Nodes[0].CoverImage.Color)
+						if err != nil {
+							log.Error("Failed to get media Color hex: ", err)
+							return
+						}
 					}
 
 					// start date
