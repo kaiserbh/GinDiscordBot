@@ -166,6 +166,9 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 							break
 						}
 					}
+					if mainStudio == "" {
+						mainStudio = "\u200b"
+					}
 
 					description, startDate, endDate := anilistAnimeData(anime)
 
@@ -270,14 +273,24 @@ func manga(s *discordgo.Session, m *discordgo.MessageCreate) {
 						return
 					}
 
-					colorHex, err := convertStringHexColorToInt(manga.CoverImage.Color)
-					if err != nil {
-						log.Error("Failed to get media Color hex: ", err)
-						return
+					// making sure color hex is not empty
+					var colorHex int
+					if manga.CoverImage.Color == "" {
+						colorHex = green
+					} else {
+						colorHex, err = convertStringHexColorToInt(manga.CoverImage.Color)
+						if err != nil {
+							log.Error("Failed to get media Color hex: ", err)
+							return
+						}
 					}
 
 					genres := strings.Join(manga.Genres, ",")
 					description, startDate, endDate := anilistAnimeData(manga)
+
+					if manga.Source == "" {
+						manga.Source = "\u200b"
+					}
 
 					// start embed
 					embed := NewEmbed().
@@ -320,10 +333,10 @@ func manga(s *discordgo.Session, m *discordgo.MessageCreate) {
 					manga := anilistgo.NewMediaQuery()
 					_, err := manga.FilterMangaByID(mangaID)
 					if err != nil {
-						log.Error("Failed to filter media by ID: ", err)
+						log.Error("Failed to filter manga by ID: ", err)
 						// start embed
 						embed := NewEmbed().
-							SetDescription("Media not found!\n Maybe try using title?").
+							SetDescription("Manga not found!\n Maybe try using title?").
 							SetColor(red).
 							MessageEmbed
 
@@ -336,14 +349,23 @@ func manga(s *discordgo.Session, m *discordgo.MessageCreate) {
 						return
 					}
 
-					colorHex, err := convertStringHexColorToInt(manga.CoverImage.Color)
-					if err != nil {
-						log.Error("Failed to get media Color hex: ", err)
-						return
+					var colorHex int
+					if manga.CoverImage.Color == "" {
+						colorHex = green
+					} else {
+						colorHex, err = convertStringHexColorToInt(manga.CoverImage.Color)
+						if err != nil {
+							log.Error("Failed to get media Color hex: ", err)
+							return
+						}
 					}
 
 					genres := strings.Join(manga.Genres, ",")
 					description, startDate, endDate := anilistAnimeData(manga)
+
+					if manga.Source == "" {
+						manga.Source = "\u200b"
+					}
 
 					// start embed
 					embed := NewEmbed().
