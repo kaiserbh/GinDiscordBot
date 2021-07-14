@@ -70,7 +70,7 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 								SetDescription("Gin is a feature rich Discord bot designed to bring FUN into your server or one would hope so...").
 								AddField("Invite", fmt.Sprintf("[Invite %s](https://discord.com/oauth2/authorize?"+
 									"client_id=854839186287493151&permissions=4228906231&scope=bot)", s.State.User.Username)).
-								AddField("Support Server", "[Gin Support](https://discord.gg/nkGvkUUqHZ)").
+								AddField("Support Server", "[Gin Support](https://discord.gg/SD2D6Y8RaC)").
 								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
 								SetColor(green).MessageEmbed
 
@@ -187,7 +187,6 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 								AddField("manga", "Query manga from Anilist").
 								AddField("character", "Query character from Anilist").
 								AddField("staff", "Query person/staff from Anilist").
-								AddField("studio", "Query studio from Anilist").
 								AddField("user", "Query user from Anilist").
 								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
 								SetColor(green).MessageEmbed
