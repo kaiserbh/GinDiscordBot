@@ -298,6 +298,10 @@ func manga(s *discordgo.Session, m *discordgo.MessageCreate) {
 					}
 
 					genres := strings.Join(manga.Genres, ",")
+					if genres == "" {
+						genres = "\u200b"
+					}
+
 					description, startDate, endDate := anilistAnimeData(manga)
 
 					if manga.Source == "" {
@@ -373,6 +377,10 @@ func manga(s *discordgo.Session, m *discordgo.MessageCreate) {
 					}
 
 					genres := strings.Join(manga.Genres, ",")
+					if genres == "" {
+						genres = "\u200b"
+					}
+
 					description, startDate, endDate := anilistAnimeData(manga)
 
 					if manga.Source == "" {
