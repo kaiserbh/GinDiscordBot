@@ -717,7 +717,7 @@ func cutDescription(description string) string {
 		break
 	}
 	// replace <br> with new line
-	strings.Replace(descriptionCut, "<br>", "\n", -1)
+	descriptionCut = strings.Replace(descriptionCut, "<br>", "\n", -1)
 
 	return descriptionCut
 }
