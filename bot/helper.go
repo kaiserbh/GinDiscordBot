@@ -713,7 +713,7 @@ func cutDescription(description string) string {
 		descriptionCut = strings.Join(split[0:7], ".")
 		break
 	default:
-		descriptionCut = strings.Join(split[0:8], ".")
+		descriptionCut = strings.Join(split[0:], ".")
 		break
 	}
 	// replace <br> with new line
