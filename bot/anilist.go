@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // anime query media from anilist by id or name.
@@ -27,7 +28,7 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if m.Author.ID == s.State.User.ID {
 				return
 			}
-			if animeArgs == guild.GuildPrefix+"anime" {
+			if animeArgs == guild.GuildPrefix+"anime" || animeArgs == guild.GuildPrefix+"a" {
 				// reset messageContent and arguments
 				messageContent = m.Content
 				args = getArguments(messageContent)
@@ -275,7 +276,7 @@ func manga(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if m.Author.ID == s.State.User.ID {
 				return
 			}
-			if mangaArgs == guild.GuildPrefix+"manga" {
+			if mangaArgs == guild.GuildPrefix+"manga" || mangaArgs == guild.GuildPrefix+"m" {
 				// reset messageContent and arguments
 				messageContent = m.Content
 				args = getArguments(messageContent)
@@ -475,7 +476,7 @@ func character(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if m.Author.ID == s.State.User.ID {
 				return
 			}
-			if characterArgs == guild.GuildPrefix+"character" || characterArgs == guild.GuildPrefix+"char" {
+			if characterArgs == guild.GuildPrefix+"character" || characterArgs == guild.GuildPrefix+"c" {
 				// reset messageContent and arguments
 				messageContent = m.Content
 				args = getArguments(messageContent)
@@ -668,7 +669,7 @@ func staff(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if m.Author.ID == s.State.User.ID {
 				return
 			}
-			if staffArgs == guild.GuildPrefix+"staff" {
+			if staffArgs == guild.GuildPrefix+"staff" || staffArgs == guild.GuildPrefix+"s" {
 				// reset messageContent and arguments
 				messageContent = m.Content
 				args = getArguments(messageContent)
@@ -911,7 +912,7 @@ func user(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	messageContent := strings.ToLower(m.Content)
 	args := getArguments(messageContent)
-	staffArgs := args[0]
+	userArgs := args[0]
 
 	if strings.HasPrefix(messageContent, guild.GuildPrefix) {
 		// check if the channel is bot channel or allowed channel.
@@ -920,7 +921,7 @@ func user(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if m.Author.ID == s.State.User.ID {
 				return
 			}
-			if staffArgs == guild.GuildPrefix+"user" {
+			if userArgs == guild.GuildPrefix+"user" || userArgs == guild.GuildPrefix+"u" {
 				// reset messageContent and arguments
 				messageContent = m.Content
 				args = getArguments(messageContent)
@@ -963,8 +964,8 @@ func user(s *discordgo.Session, m *discordgo.MessageCreate) {
 					if len(user.Favourites.Anime.Edges) > 0 {
 						colorHex, err = convertStringHexColorToInt(user.Favourites.Anime.Edges[0].Node.CoverImage.Color)
 						if err != nil {
-							log.Error("Failed to get media Color hex: ", err)
-							return
+							log.Error("Failed to get media Color hex: setting default colour to green: ", err)
+							colorHex = green
 						}
 
 						for _, anime := range user.Favourites.Anime.Edges {
@@ -976,11 +977,24 @@ func user(s *discordgo.Session, m *discordgo.MessageCreate) {
 					}
 
 					// check the length of animeFavourites
-
 					if len(userAnimeFavourites) >= 4 {
 						joinedAnimeFav = strings.Join(userAnimeFavourites[0:4], "\n")
 					} else {
 						joinedAnimeFav = strings.Join(userAnimeFavourites, "\n")
+					}
+
+					// join date seconds to unix time.
+					createdAt := user.CreatedAt
+					var joinedDate time.Time
+					var joinDateString string
+
+					if createdAt != 0 {
+						joinedDate = time.Unix(int64(createdAt), 0).UTC()
+						joinDateString = joinedDate.Format(time.RFC822)
+						split := strings.Split(joinDateString, " ")
+						joinDateString = strings.Join(split[0:3], "-") + "\n" + strings.Join(split[3:], " ")
+					} else {
+						joinDateString = "0"
 					}
 
 					// start embed
@@ -998,7 +1012,7 @@ func user(s *discordgo.Session, m *discordgo.MessageCreate) {
 						AddField("Total Manga", strconv.Itoa(user.Statistics.Manga.Count)).
 						AddField("Chapters Read", strconv.Itoa(user.Statistics.Manga.ChaptersRead)).
 						AddField("Mean Score Manga", strconv.FormatFloat(user.Statistics.Manga.MeanScore, 'f', 1, 64)).
-						AddField("Created At", strconv.Itoa(user.CreatedAt)).
+						AddField("Created At", joinDateString).
 						AddField("Anime Favourites", joinedAnimeFav).
 						SetFooter(user.Name, user.Avatar.Large).
 						InlineAllFields().
@@ -1045,7 +1059,7 @@ func user(s *discordgo.Session, m *discordgo.MessageCreate) {
 						colorHex, err = convertStringHexColorToInt(user.Favourites.Anime.Edges[0].Node.CoverImage.Color)
 						if err != nil {
 							log.Error("Failed to get media Color hex: ", err)
-							return
+							colorHex = green
 						}
 
 						for _, anime := range user.Favourites.Anime.Edges {
@@ -1064,6 +1078,20 @@ func user(s *discordgo.Session, m *discordgo.MessageCreate) {
 						joinedAnimeFav = strings.Join(userAnimeFavourites, "\n")
 					}
 
+					// join date seconds to unix time.
+					createdAt := user.CreatedAt
+					var joinedDate time.Time
+					var joinDateString string
+
+					if createdAt != 0 {
+						joinedDate = time.Unix(int64(createdAt), 0).UTC()
+						joinDateString = joinedDate.Format(time.RFC822)
+						split := strings.Split(joinDateString, " ")
+						joinDateString = strings.Join(split[0:3], "-") + "\n" + strings.Join(split[3:], " ")
+					} else {
+						joinDateString = "0"
+					}
+
 					// start embed
 					embed := NewEmbed().
 						SetTitle(user.Name).
@@ -1079,7 +1107,7 @@ func user(s *discordgo.Session, m *discordgo.MessageCreate) {
 						AddField("Total Manga", strconv.Itoa(user.Statistics.Manga.Count)).
 						AddField("Chapters Read", strconv.Itoa(user.Statistics.Manga.ChaptersRead)).
 						AddField("Mean Score Manga", strconv.FormatFloat(user.Statistics.Manga.MeanScore, 'f', 1, 64)).
-						AddField("Created At", strconv.Itoa(user.CreatedAt)).
+						AddField("Created At", joinDateString).
 						AddField("Anime Favourites", joinedAnimeFav).
 						SetFooter(user.Name, user.Avatar.Large).
 						InlineAllFields().
