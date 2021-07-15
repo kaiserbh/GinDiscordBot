@@ -41,7 +41,6 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 							SetDescription("hmm, make sure you end the last instance of help menu before executing another one MADAO...").
 							SetColor(red).MessageEmbed
 
-						// add reaction to the message author
 						_, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
 						if err != nil {
 							log.Error("Failed to send embed to the channel: ", err)
@@ -69,8 +68,9 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 								SetTitle("Gin Help Menu").
 								SetThumbnail(botImage).
 								SetDescription("Gin is a feature rich Discord bot designed to bring FUN into your server or one would hope so...").
-								AddField("Invite", fmt.Sprintf("[Invite %s](https://discordapp.com/oauth2/authorize?client_id=%s&scope=bot&permissions=8)", s.State.User.Username, s.State.User.ID)).
-								AddField("Support Server", "[Gin Support](https://discord.gg/nkGvkUUqHZ)").
+								AddField("Invite", fmt.Sprintf("[Invite %s](https://discord.com/oauth2/authorize?"+
+									"client_id=854839186287493151&permissions=4228906231&scope=bot)", s.State.User.Username)).
+								AddField("Support Server", "[Gin Support](https://discord.gg/SD2D6Y8RaC)").
 								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
 								SetColor(green).MessageEmbed
 
@@ -187,7 +187,6 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 								AddField("manga", "Query manga from Anilist").
 								AddField("character", "Query character from Anilist").
 								AddField("staff", "Query person/staff from Anilist").
-								AddField("studio", "Query studio from Anilist").
 								AddField("user", "Query user from Anilist").
 								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
 								SetColor(green).MessageEmbed
@@ -256,7 +255,8 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 								SetTitle("Gin Help Menu").
 								SetThumbnail(botImage).
 								SetDescription("Gin is a feature rich Discord bot designed to bring FUN into your server or one would hope so...").
-								AddField("Invite", fmt.Sprintf("[Invite %s](https://discordapp.com/oauth2/authorize?client_id=%s&scope=bot&permissions=8)", s.State.User.Username, s.State.User.ID)).
+								AddField("Invite", fmt.Sprintf("[Invite %s](https://discord.com/oauth2/authorize?"+
+									"client_id=854839186287493151&permissions=4228906231&scope=bot)", s.State.User.Username)).
 								AddField("Support Server", "[Gin Support](https://discord.gg/nkGvkUUqHZ)").
 								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
 								SetColor(green).MessageEmbed
@@ -287,8 +287,8 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-// pingMessageHandler pings the bot
-func pingMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
+// pingLatency pings the bot to get latency to discord server.
+func pingLatency(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Checks if the message has prefix from the database file.
 	guild, err := db.FindGuildByID(m.GuildID)
 	if err != nil {
@@ -426,8 +426,42 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		// user message ID
 		lastMessage := m.Message.ID
+
 		// check if it's nick or nickname since contains func will return both nickname and nick function.
-		if parameter[0] == guild.GuildPrefix+"nick" {
+		if strings.ToLower(parameter[0]) == guild.GuildPrefix+"nick" {
+
+			for _, authorID := range nickCoolDownAuthor {
+				// check if user is in the cooldownlist
+				if m.Author.ID == authorID {
+					embed := NewEmbed().
+						SetDescription("Too fast....").
+						SetColor(red).MessageEmbed
+
+					_, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
+					if err != nil {
+						log.Error("Failed to send embed to the channel: ", err)
+						return
+					}
+					botMessageID, err := getBotMessageID(s, m)
+					if err != nil {
+						log.Error("Failed to get bot message ID: ", err)
+						return
+					}
+					err = s.ChannelMessageDelete(m.ChannelID, botMessageID)
+					if err != nil {
+						log.Error("Failed to remove bot message: ", err)
+						return
+					}
+
+					err = s.ChannelMessageDelete(m.ChannelID, lastMessage)
+					if err != nil {
+						log.Error("Failed to remove user message: ", err)
+						return
+					}
+					return
+				}
+			}
+
 			// check if allowed channel.
 			if allowedChannels {
 				if strings.Contains(messageContent, guild.GuildPrefix+"nick") {
@@ -471,7 +505,40 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 					if allowedNickChange {
 						// do nothing if the user didn't provide arguments for nickname
 						if len(parameter) < 2 {
-							log.Info("Doing nothing since no arguments was provided")
+							timer := time.Now()
+							if user.AllowedNickChange {
+								embed := NewEmbed().
+									SetDescription("You can change your nickname. use `" + guild.GuildPrefix + "nick <desired nickname>` to change it.").
+									SetColor(green).MessageEmbed
+								_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+								if err != nil {
+									log.Warn("Failed to send embed to the channel: ", err)
+									return
+								}
+
+								for {
+									if time.Since(timer).Seconds() > 5 {
+										// bot messageID
+										botMessageID, err := getBotMessageID(s, m)
+										if err != nil {
+											log.Error("Failed to get bot message ID: ", err)
+											return
+										}
+										// delete user message and bot messages.
+										err = s.ChannelMessageDelete(m.ChannelID, botMessageID)
+										if err != nil {
+											log.Error("Failed to remove bot message: ", err)
+											return
+										}
+										err = s.ChannelMessageDelete(m.ChannelID, lastMessage)
+										if err != nil {
+											log.Error("Failed to remove user message: ", err)
+											return
+										}
+										return
+									}
+								}
+							}
 							return
 						}
 						// get the spaces as well.
@@ -533,60 +600,87 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 						// get how long time left
 						err = getTimeLeftForNick(s, m, "Successfully changed nickname for this server. \n")
 						if err != nil {
-							log.Error("Failed to get time left for nick change")
+							log.Error("Failed to get time left for nick change: ", err)
 							return
 						}
 
-						// gets bot Message ID
-						botMessageID, err := getBotMessageID(s, m)
-						if err != nil {
-							log.Error("Failed to get botID")
-							return
-						}
+						nickCoolDownAuthor = append(nickCoolDownAuthor, m.Author.ID)
 
 						// for loop to check time passed before deleting user message and bot message.
 						for {
 							since := time.Since(timerToRemoveBotMessageAndUser).Seconds()
 
-							if since >= 5 {
+							// bot messageIDs
+							botMessageIDs, err := getAllBotMessagesID(s, m)
+							if err != nil {
+								log.Error("Failed to get bot message IDs")
+								return
+							}
+
+							if since >= 10 {
+								log.WithFields(log.Fields{
+									"time": since,
+								}).Info("Removing bot message and user since time has been passed")
 								err = s.ChannelMessageDelete(m.ChannelID, lastMessage)
 								if err != nil {
 									log.Error("Failed to delete user message: ", err)
 									return
 								}
-								err = s.ChannelMessageDelete(m.ChannelID, botMessageID)
-								if err != nil {
-									log.Error("Failed to delete user message: ", err)
-									return
+								for _, val := range botMessageIDs {
+									err = s.ChannelMessageDelete(m.ChannelID, val)
+									if err != nil {
+										log.Error("Failed to delete user message: ", err)
+										return
+									}
+								}
+
+								for i, id := range nickCoolDownAuthor {
+									if id == m.Author.ID {
+										nickCoolDownAuthor = removeElementFromSlice(nickCoolDownAuthor, i)
+									}
 								}
 								return
 							}
 						}
 					} else {
+						nickCoolDownAuthor = append(nickCoolDownAuthor, m.Author.ID)
 						err = getTimeLeftForNick(s, m, "")
 						if err != nil {
-							log.Error("Failed to get time left for nick change")
+							log.Error("Failed to get time left for nick change: ", err)
 							return
 						}
-						// gets bot Message ID
-						botMessageID, err := getBotMessageID(s, m)
-						if err != nil {
-							log.Error("Failed to get botID")
-							return
-						}
+
 						// for loop to check time passed before deleting user message and bot message.
 						for {
 							since := time.Since(timerToRemoveBotMessageAndUser).Seconds()
-							if since >= 5 {
+							// bot messageIDs
+							botMessageIDs, err := getAllBotMessagesID(s, m)
+							if err != nil {
+								log.Error("Failed to get bot message IDs: ", err)
+								return
+							}
+
+							if since >= 10 {
+								log.WithFields(log.Fields{
+									"time": since,
+								}).Info("Removing bot message and user since time has been passed")
 								err = s.ChannelMessageDelete(m.ChannelID, lastMessage)
 								if err != nil {
 									log.Error("Failed to delete user message: ", err)
 									return
 								}
-								err = s.ChannelMessageDelete(m.ChannelID, botMessageID)
-								if err != nil {
-									log.Error("Failed to delete user message: ", err)
-									return
+								for _, val := range botMessageIDs {
+									err = s.ChannelMessageDelete(m.ChannelID, val)
+									if err != nil {
+										log.Error("Failed to delete user message: ", err)
+										return
+									}
+								}
+								// remove user ID from cooldown
+								for i, id := range nickCoolDownAuthor {
+									if id == m.Author.ID {
+										nickCoolDownAuthor = removeElementFromSlice(nickCoolDownAuthor, i)
+									}
 								}
 								return
 							}
@@ -623,9 +717,9 @@ func resetNickHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 				}
 				// add reaction to the message author
 				lastMessage := m.Message.ID
-				err = s.MessageReactionAdd(m.ChannelID, lastMessage, "✅")
+				err = s.ChannelMessageDelete(m.ChannelID, lastMessage)
 				if err != nil {
-					log.Error("Failed to add reaction: ", err)
+					log.Error("Failed to remove user message: ", err)
 					return
 				}
 			}
@@ -678,7 +772,7 @@ func botPing(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-// invite fetches bot invite
+// invite sends invite link for the bot
 func invite(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Checks if the message has prefix from the database file.
 	guild, err := db.FindGuildByID(m.GuildID)
@@ -692,15 +786,17 @@ func invite(s *discordgo.Session, m *discordgo.MessageCreate) {
 		// check if the channel is bot channel or allowed channel.
 		allowedChannels := checkAllowedChannel(m.ChannelID, guild)
 		if allowedChannels {
+			// if the message is from the bot
 			if m.Author.ID == s.State.User.ID {
 				return
 			}
 			if messageContent == guild.GuildPrefix+"invite" {
 				// start embed
 				embed := NewEmbed().
-					SetTitle(fmt.Sprintf("Invite %s", s.State.User.Username)).
-					SetDescription(fmt.Sprintf("[link](https://discord.com/api/oauth2/authorize?client_id=%s&permissions=8&scope=bot)", s.State.User.ID)).
-					MessageEmbed
+					SetTitle("Gin invite link").
+					SetURL("https://discord.com/api/oauth2/authorize?client_id=" + s.State.User.ID +
+						"&permissions=4228906231&scope=bot").
+					SetColor(green).MessageEmbed
 
 				// add reaction to the message author
 
@@ -709,75 +805,8 @@ func invite(s *discordgo.Session, m *discordgo.MessageCreate) {
 					log.Error("Failed to send embed to the channel: ", err)
 					return
 				}
+
 			}
 		}
 	}
 }
-
-// Gaki command disabled
-/*
-func gaki(s *discordgo.Session, m *discordgo.MessageCreate) {
-
-	// Checks if the message has prefix from the database file.
-
-	messageContent := strings.ToLower(m.Content)
-
-	// check if the channel is bot channel or allowed channel.
-
-	if m.Author.ID == s.State.User.ID {
-		return
-	}
-
-	if strings.Contains(messageContent, "gaki") {
-		// start embed
-		embed := NewEmbed().
-			SetDescription("Should go back to his dungeon").
-			SetImage("https://media.discordapp.net/attachments/703063888241098832/745009187053895831/8CFoRfV0IXScYAAAAASUVORK5CYII.png?width=400&height=226").
-			MessageEmbed
-		_, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
-
-		if err != nil {
-			log.Error("Failed to send embed to the channel: ", err)
-			return
-		}
-
-		// add reaction to the message author
-		err = s.MessageReactionAdd(m.ChannelID, m.Message.ID, ":smirk~1:862978313655156766")
-		if err != nil {
-			log.Error("Failed to add reaction: ", err)
-			return
-		}
-	}
-}
-*/
-/*
-func test(s *discordgo.Session, m *discordgo.MessageCreate) {
-
-	// Checks if the message has prefix from the database file.
-
-	messageContent := strings.ToLower(m.Content)
-
-	// check if the channel is bot channel or allowed channel.
-
-	if m.Author.ID == s.State.User.ID {
-		return
-	}
-
-	if strings.Contains(messageContent, "test") {
-		// start embed
-		_, err := s.ChannelMessageSend(m.ChannelID, "test")
-
-		if err != nil {
-			log.Error("Failed to send embed to the channel: ", err)
-			return
-		}
-
-		// add reaction to the message author
-		err = s.MessageReactionAdd(m.ChannelID, m.Message.ID, ":smirk~1:862978313655156766")
-		if err != nil {
-			log.Error("Failed to add reaction: ", err)
-			return
-		}
-	}
-}
-*/
