@@ -513,10 +513,16 @@ func character(s *discordgo.Session, m *discordgo.MessageCreate) {
 						return
 					}
 
-					colorHex, err := convertStringHexColorToInt(character.Media.Nodes[0].CoverImage.Color)
-					if err != nil {
-						log.Error("Failed to get media Color hex: ", err)
-						return
+					// making sure color hex is not empty
+					var colorHex int
+					if character.Media.Nodes[0].CoverImage.Color == "" {
+						colorHex = green
+					} else {
+						colorHex, err = convertStringHexColorToInt(character.Media.Nodes[0].CoverImage.Color)
+						if err != nil {
+							log.Error("Failed to get media Color hex: ", err)
+							colorHex = green
+						}
 					}
 
 					characterStartMonth := strconv.Itoa(character.DateOfBirth.Month)
@@ -589,10 +595,16 @@ func character(s *discordgo.Session, m *discordgo.MessageCreate) {
 						return
 					}
 
-					colorHex, err := convertStringHexColorToInt(character.Media.Nodes[0].CoverImage.Color)
-					if err != nil {
-						log.Error("Failed to get media Color hex: ", err)
-						return
+					// making sure color hex is not empty
+					var colorHex int
+					if character.Media.Nodes[0].CoverImage.Color == "" {
+						colorHex = green
+					} else {
+						colorHex, err = convertStringHexColorToInt(character.Media.Nodes[0].CoverImage.Color)
+						if err != nil {
+							log.Error("Failed to get media Color hex: ", err)
+							colorHex = green
+						}
 					}
 
 					characterStartMonth := strconv.Itoa(character.DateOfBirth.Month)
