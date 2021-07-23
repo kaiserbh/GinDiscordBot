@@ -450,22 +450,22 @@ func getMemInfo() (string, error) {
 	return convertToString + "%", nil
 }
 
-func getTimeLeftForNick(s *discordgo.Session, m *discordgo.MessageCreate, message string) error {
+func getTimeLeftForNick(s *discordgo.Session, authorID, guildID, channelID string, message string) error {
 	// get guild info from DB
-	guild, err := db.FindGuildByID(m.GuildID)
+	guild, err := db.FindGuildByID(guildID)
 	if err != nil {
 		log.Error("Finding Guild: ", err)
 		return err
 	}
 
 	// guild member used to retrieve username
-	guildMember, err := s.GuildMember(m.GuildID, m.Author.ID)
+	guildMember, err := s.GuildMember(guildID, authorID)
 	if err != nil {
 		log.Error("Failed to get member details: ", err)
 		return err
 	}
 
-	userDB, err := db.FindUserByID(m.GuildID, m.Author.ID)
+	userDB, err := db.FindUserByID(guildID, authorID)
 	if err != nil {
 		log.Error("Failed to get user: ", err)
 		return err
@@ -502,7 +502,7 @@ func getTimeLeftForNick(s *discordgo.Session, m *discordgo.MessageCreate, messag
 	// updates the allowedNickChange to True if it's full filled
 	if userLastNickUpdate >= guildNickDaysDurationToSeconds {
 		updateUserDB := model.User{
-			UserID:            m.Author.ID,
+			UserID:            authorID,
 			Guild:             guild,
 			NickName:          guildMember.Nick,
 			Date:              userDB.Date,
@@ -520,14 +520,14 @@ func getTimeLeftForNick(s *discordgo.Session, m *discordgo.MessageCreate, messag
 
 	// let them know when they can reset their nickname.
 	embed := NewEmbed().
-		SetDescription(message + m.Author.Username +
-			fmt.Sprintf(" you can change your nickname in `%d%s %d%s %d%s %d%s`.",
+		SetDescription(message +
+			fmt.Sprintf("Can change nickname in `%d%s %d%s %d%s %d%s`.",
 				days, "d",
 				hours, "h",
 				minutes, "m",
 				seconds, "s")).
 		SetColor(green).MessageEmbed
-	_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
+	_, err = s.ChannelMessageSendEmbed(channelID, embed)
 	if err != nil {
 		log.Error("On sending parameter error message to channel: ", err)
 		return err
@@ -538,8 +538,11 @@ func getTimeLeftForNick(s *discordgo.Session, m *discordgo.MessageCreate, messag
 
 // removeElementFromSlice removes element from slice
 func removeElementFromSlice(s []string, i int) []string {
-	s[i] = s[len(s)-1]
-	return s[:len(s)-1]
+	if len(s) >= 1 {
+		s[i] = s[len(s)-1]
+		return s[:len(s)-1]
+	}
+	return s
 }
 
 func convertStringHexColorToInt(data string) (int, error) {

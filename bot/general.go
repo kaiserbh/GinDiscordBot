@@ -148,10 +148,10 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 								AddField("ping", "Pong! Get my latency.").
 								AddField("stats", "See some super cool statistics about me.").
 								AddField("nick", "Change nickname").
+								AddField("nickdur", "check other @users nick duration").
 								AddField("reset", "resets nickname (doesn't reset duration)").
 								AddField("invite", "Get a link to invite me.").
 								AddField("support", "Get a link to my support server.").
-								AddField("source", "Get the link to Gin's GitHub repository.").
 								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
 								SetColor(green).MessageEmbed
 
@@ -598,7 +598,7 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 						}
 
 						// get how long time left
-						err = getTimeLeftForNick(s, m, "Successfully changed nickname for this server. \n")
+						err = getTimeLeftForNick(s, m.Author.ID, m.GuildID, m.ChannelID, "Successfully changed nickname for this server. \n"+m.Author.Username)
 						if err != nil {
 							log.Error("Failed to get time left for nick change: ", err)
 							return
@@ -644,7 +644,7 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 						}
 					} else {
 						nickCoolDownAuthor = append(nickCoolDownAuthor, m.Author.ID)
-						err = getTimeLeftForNick(s, m, "")
+						err = getTimeLeftForNick(s, m.Author.ID, m.GuildID, m.ChannelID, ""+m.Author.Username)
 						if err != nil {
 							log.Error("Failed to get time left for nick change: ", err)
 							return
@@ -686,6 +686,59 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 							}
 						}
 					}
+				}
+			}
+			// check other user nickname duration.
+		} else if strings.ToLower(parameter[0]) == guild.GuildPrefix+"nickdur" {
+			timerToRemoveBotMessageAndUser := time.Now()
+			// check param if it's 2 or not.
+			if len(parameter) != 2 {
+				log.Info("Doing nothing since no params or user have been given or probably more params than needed")
+				return
+			}
+			user := parameter[1]
+			// clean param and get the user ID
+			cleanUserID := strings.TrimPrefix(strings.TrimSuffix(user, ">"), "<@!")
+			nickCoolDownAuthor = append(nickCoolDownAuthor, m.Author.ID)
+			err = getTimeLeftForNick(s, cleanUserID, m.GuildID, m.ChannelID, "")
+			if err != nil {
+				log.Error("Failed to get time left for nick change: ", err)
+				return
+			}
+
+			// for loop to check time passed before deleting user message and bot message.
+			for {
+				since := time.Since(timerToRemoveBotMessageAndUser).Seconds()
+				// bot messageIDs
+				botMessageIDs, err := getAllBotMessagesID(s, m)
+				if err != nil {
+					log.Error("Failed to get bot message IDs: ", err)
+					return
+				}
+
+				if since >= 15 {
+					log.WithFields(log.Fields{
+						"time": since,
+					}).Info("Removing bot message and user since time has been passed")
+					err = s.ChannelMessageDelete(m.ChannelID, lastMessage)
+					if err != nil {
+						log.Error("Failed to delete user message: ", err)
+						return
+					}
+					for _, val := range botMessageIDs {
+						err = s.ChannelMessageDelete(m.ChannelID, val)
+						if err != nil {
+							log.Error("Failed to delete user message: ", err)
+							return
+						}
+					}
+					// remove user ID from cooldown
+					for i := 0; i < len(nickCoolDownAuthor); i++ {
+						if nickCoolDownAuthor[i] == m.Author.ID {
+							nickCoolDownAuthor = removeElementFromSlice(nickCoolDownAuthor, i)
+						}
+					}
+					return
 				}
 			}
 		}
