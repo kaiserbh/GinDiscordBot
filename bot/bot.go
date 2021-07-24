@@ -13,10 +13,9 @@ import (
 
 var db = database.Connect()
 var (
-	red                = 0xff0000
-	green              = 0x11ff00
-	previousAuthor     string
-	nickCoolDownAuthor []string
+	red            = 0xff0000
+	green          = 0x11ff00
+	previousAuthor string
 )
 var Uptime = time.Now()
 
