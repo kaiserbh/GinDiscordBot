@@ -430,38 +430,6 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 		// check if it's nick or nickname since contains func will return both nickname and nick function.
 		if strings.ToLower(parameter[0]) == guild.GuildPrefix+"nick" {
 
-			for _, authorID := range nickCoolDownAuthor {
-				// check if user is in the cooldownlist
-				if m.Author.ID == authorID {
-					embed := NewEmbed().
-						SetDescription("Too fast....").
-						SetColor(red).MessageEmbed
-
-					_, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
-					if err != nil {
-						log.Error("Failed to send embed to the channel: ", err)
-						return
-					}
-					botMessageID, err := getBotMessageID(s, m)
-					if err != nil {
-						log.Error("Failed to get bot message ID: ", err)
-						return
-					}
-					err = s.ChannelMessageDelete(m.ChannelID, botMessageID)
-					if err != nil {
-						log.Error("Failed to remove bot message: ", err)
-						return
-					}
-
-					err = s.ChannelMessageDelete(m.ChannelID, lastMessage)
-					if err != nil {
-						log.Error("Failed to remove user message: ", err)
-						return
-					}
-					return
-				}
-			}
-
 			// check if allowed channel.
 			if allowedChannels {
 				if strings.Contains(messageContent, guild.GuildPrefix+"nick") {
@@ -604,8 +572,6 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 							return
 						}
 
-						nickCoolDownAuthor = append(nickCoolDownAuthor, m.Author.ID)
-
 						// for loop to check time passed before deleting user message and bot message.
 						for {
 							since := time.Since(timerToRemoveBotMessageAndUser).Seconds()
@@ -633,17 +599,10 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 										return
 									}
 								}
-
-								for i, id := range nickCoolDownAuthor {
-									if id == m.Author.ID {
-										nickCoolDownAuthor = removeElementFromSlice(nickCoolDownAuthor, i)
-									}
-								}
 								return
 							}
 						}
 					} else {
-						nickCoolDownAuthor = append(nickCoolDownAuthor, m.Author.ID)
 						err = getTimeLeftForNick(s, m.Author.ID, m.GuildID, m.ChannelID, ""+m.Author.Username)
 						if err != nil {
 							log.Error("Failed to get time left for nick change: ", err)
@@ -676,12 +635,6 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 										return
 									}
 								}
-								// remove user ID from cooldown
-								for i, id := range nickCoolDownAuthor {
-									if id == m.Author.ID {
-										nickCoolDownAuthor = removeElementFromSlice(nickCoolDownAuthor, i)
-									}
-								}
 								return
 							}
 						}
@@ -699,7 +652,6 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 			user := parameter[1]
 			// clean param and get the user ID
 			cleanUserID := strings.TrimPrefix(strings.TrimSuffix(user, ">"), "<@!")
-			nickCoolDownAuthor = append(nickCoolDownAuthor, m.Author.ID)
 			err = getTimeLeftForNick(s, cleanUserID, m.GuildID, m.ChannelID, "")
 			if err != nil {
 				log.Error("Failed to get time left for nick change: ", err)
@@ -730,12 +682,6 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 						if err != nil {
 							log.Error("Failed to delete user message: ", err)
 							return
-						}
-					}
-					// remove user ID from cooldown
-					for i := 0; i < len(nickCoolDownAuthor); i++ {
-						if nickCoolDownAuthor[i] == m.Author.ID {
-							nickCoolDownAuthor = removeElementFromSlice(nickCoolDownAuthor, i)
 						}
 					}
 					return
