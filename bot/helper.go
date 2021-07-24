@@ -542,6 +542,15 @@ func getTimeLeftForNick(s *discordgo.Session, authorID, guildID, channelID strin
 				log.Error("Failed to Update user: ", err)
 				return err
 			}
+			// let them know when they can reset their nickname.
+			embed := NewEmbed().
+				SetDescription(message + "Can change nickname").
+				SetColor(green).MessageEmbed
+			_, err = s.ChannelMessageSendEmbed(channelID, embed)
+			if err != nil {
+				log.Error("On sending parameter error message to channel: ", err)
+				return err
+			}
 			return nil
 		}
 		// let them know when they can reset their nickname.
