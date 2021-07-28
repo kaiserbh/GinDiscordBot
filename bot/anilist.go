@@ -107,11 +107,23 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 						anime.Source = "\u200b"
 					}
 
+					// making sure the title is not empty.
+					var animeTitle string
+					if anime.Title.English != "" {
+						animeTitle = anime.Title.English
+					} else if anime.Title.Romaji != "" {
+						animeTitle = anime.Title.Romaji
+					} else if anime.Title.Native != "" {
+						animeTitle = anime.Title.Native
+					} else {
+						animeTitle = anime.Title.UserPreferred
+					}
+
 					description, startDate, endDate := anilistAnimeData(anime)
 
 					// start embed
 					embed := NewEmbed().
-						SetTitle(anime.Title.English).
+						SetTitle(animeTitle).
 						SetURL(anime.SiteURL).
 						SetAuthor("Anilist", "https://anilist.co/img/logo_al.png").
 						SetImage(anime.BannerImage).
@@ -336,9 +348,21 @@ func manga(s *discordgo.Session, m *discordgo.MessageCreate) {
 						manga.Source = "\u200b"
 					}
 
+					// making sure the title is not empty.
+					var mangaTitle string
+					if manga.Title.English != "" {
+						mangaTitle = manga.Title.English
+					} else if manga.Title.Romaji != "" {
+						mangaTitle = manga.Title.Romaji
+					} else if manga.Title.Native != "" {
+						mangaTitle = manga.Title.Native
+					} else {
+						mangaTitle = manga.Title.UserPreferred
+					}
+
 					// start embed
 					embed := NewEmbed().
-						SetTitle(manga.Title.English).
+						SetTitle(mangaTitle).
 						SetURL(manga.SiteURL).
 						SetAuthor("Anilist", "https://anilist.co/img/logo_al.png").
 						SetImage(manga.BannerImage).
