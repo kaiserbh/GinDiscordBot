@@ -2,11 +2,12 @@ package bot
 
 import (
 	"fmt"
-	"github.com/kaiserbh/anilistgo"
 	"io/ioutil"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/kaiserbh/anilistgo"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/c9s/goprocinfo/linux"
@@ -511,7 +512,7 @@ func getTimeLeftForNick(s *discordgo.Session, authorID, guildID, channelID strin
 		// let them know when they can reset their nickname.
 		embed := NewEmbed().
 			SetDescription(message +
-				fmt.Sprintf("Can change nickname in `%d%s %d%s %d%s %d%s`.",
+				fmt.Sprintf(" Can change nickname in `%d%s %d%s %d%s %d%s`.",
 					days, "d",
 					hours, "h",
 					minutes, "m",
@@ -544,7 +545,7 @@ func getTimeLeftForNick(s *discordgo.Session, authorID, guildID, channelID strin
 			}
 			// let them know when they can reset their nickname.
 			embed := NewEmbed().
-				SetDescription(message + "Can change nickname").
+				SetDescription(message + " Can change nickname").
 				SetColor(green).MessageEmbed
 			_, err = s.ChannelMessageSendEmbed(channelID, embed)
 			if err != nil {
