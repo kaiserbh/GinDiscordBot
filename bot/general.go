@@ -468,6 +468,42 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 						return
 					}
 
+					// check if the date has already passed the duration set
+					oldDate := user.Date
+					timePassed := time.Since(oldDate).Seconds()
+					guildNickDuration, err := strconv.Atoi(guild.GuildNicknameDuration)
+					if err != nil {
+						log.Error("Failed to convert guild Nick duration to int: ", err)
+						return
+					}
+					guildNickDuration = guildNickDuration * 86400
+
+					if timePassed >= float64(guildNickDuration) {
+						// guild member used to retrieve username
+						guildMember, err := s.GuildMember(m.GuildID, m.Author.ID)
+						if err != nil {
+							log.Error("Failed to get member details: ", err)
+							return
+						}
+
+						updateUserDB := model.User{
+							UserID:            m.Author.ID,
+							Guild:             guild,
+							NickName:          guildMember.Nick,
+							Date:              time.Now(),
+							AllowedNickChange: true,
+							TimeStamp:         time.Now(),
+						}
+						err = db.InsertOrUpdateUser(guild, &updateUserDB)
+						if err != nil {
+							log.Error("Failed to Update user: ", err)
+							return
+						}
+					}
+
+					// retreive the updated change.
+					user, _ = db.FindUserByID(m.GuildID, m.Author.ID)
+
 					// If user can change their nickname.
 					allowedNickChange := user.AllowedNickChange
 					if allowedNickChange {
@@ -603,6 +639,9 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 							}
 						}
 					} else {
+
+						// Check if the old date it's passed if it's then change the nickname.
+
 						err = getTimeLeftForNick(s, m.Author.ID, m.GuildID, m.ChannelID, ""+m.Author.Username)
 						if err != nil {
 							log.Error("Failed to get time left for nick change: ", err)
