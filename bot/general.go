@@ -681,7 +681,7 @@ func setNick(s *discordgo.Session, m *discordgo.MessageCreate) {
 				}
 			}
 			// check other user nickname duration.
-		} else if strings.ToLower(parameter[0]) == guild.GuildPrefix+"nickdur" {
+		} else if strings.ToLower(parameter[0]) == guild.GuildPrefix + "nickdur" {
 			timerToRemoveBotMessageAndUser := time.Now()
 			// check param if it's 2 or not.
 			if len(parameter) != 2 {

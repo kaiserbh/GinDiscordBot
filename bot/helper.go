@@ -525,8 +525,10 @@ func getTimeLeftForNick(s *discordgo.Session, authorID, guildID, channelID strin
 		}
 		return nil
 	} else {
+		// function will never be run or go to the else clause because it's false by default (dead code by now.)
+		
 		// if the seconds is greater than the duration seconds set by the guild then return
-		//and let them know they can change their nick.
+		// and let them know they can change their nick.
 		// updates the allowedNickChange to True if it's full filled
 		if userLastNickUpdate >= guildNickDaysDurationToSeconds {
 			updateUserDB := model.User{
