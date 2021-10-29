@@ -848,3 +848,33 @@ func invite(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	}
 }
+
+// authorizeAnilist used to authorize user accounts to anilist.
+func authorizeAnilist(s *discordgo.Session, m *discordgo.MessageCreate) {
+	// Checks if the message has prefix from the database file.
+	guild, err := db.FindGuildByID(m.GuildID)
+	if err != nil {
+		log.Error("Finding Guild: ", err)
+		return
+	}
+	messageContent := strings.ToLower(m.Content)
+	anilist_authorization_url := "https://anilist.co/api/v2/oauth/authorize?client_id=6823&redirect_uri=https://anilist.co/api/v2/oauth/pin&response_type=code"
+	//TODO: Need to be done not yet finished
+	//TODO: Check DM if it's enabled
+	//TODO: Send message to user DM
+	//TODO: paste the code inside DM 
+	//TODO: Update DB to store authorizeation code
+	//TODO: get anilist username and add it to DB
+	if strings.HasPrefix(messageContent, guild.GuildPrefix) {
+		// check if the channel is bot channel or allowed channel.
+		allowedChannels := checkAllowedChannel(m.ChannelID, guild)
+		if allowedChannels {
+			if m.Author.ID == s.State.User.ID {
+				return
+			}
+			if messageContent == guild.GuildPrefix+"authorizeAnilist" {
+				
+			}
+		}
+	}
+}
