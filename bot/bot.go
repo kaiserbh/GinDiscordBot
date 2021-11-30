@@ -74,6 +74,9 @@ func Start() {
 	goBot.AddHandler(staff)
 	goBot.AddHandler(user)
 
+	// mal commands
+	goBot.AddHandler(malAnime)
+
 	//miscellaneousCommands
 	//TODO:permissions Show your permissions or the member specified.
 	//TODO:userinfo Show some information about yourself or the member specified.
