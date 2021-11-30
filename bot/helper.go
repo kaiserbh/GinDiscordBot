@@ -83,15 +83,15 @@ func checkGuildOwner(session *discordgo.Session, msgEvent *discordgo.MessageCrea
 }
 
 // check latency or how long a function takes to execute
-func measureTime(funcName string) func() {
-	start := time.Now()
-	return func() {
-		log.WithFields(log.Fields{
-			"funcName": funcName,
-			"time":     time.Since(start),
-		}).Info("Time taken by function is completed")
-	}
-}
+// func measureTime(funcName string) func() {
+// 	start := time.Now()
+// 	return func() {
+// 		log.WithFields(log.Fields{
+// 			"funcName": funcName,
+// 			"time":     time.Since(start),
+// 		}).Info("Time taken by function is completed")
+// 	}
+// }
 
 // check allowed channel to use bot command.
 func checkAllowedChannel(id string, settings *model.GuildSettings) bool {
@@ -486,7 +486,7 @@ func getTimeLeftForNick(s *discordgo.Session, authorID, guildID, channelID strin
 	userLastNickUpdate := time.Since(userDB.Date).Seconds()
 
 	// convertStringToInt
-	guildDurationToFloat, err := strconv.ParseFloat(userDB.Guild.GuildNicknameDuration, 10)
+	guildDurationToFloat, err := strconv.ParseFloat(userDB.Guild.GuildNicknameDuration, 64)
 	if err != nil {
 		log.Error("Failed to convert GuildNickname duration to int: ", err)
 		return err
@@ -528,7 +528,7 @@ func getTimeLeftForNick(s *discordgo.Session, authorID, guildID, channelID strin
 	}
 
 	// if user can't change nickname check if they can change nick.
-	if userDB.AllowedNickChange == false {
+	if !userDB.AllowedNickChange {
 		// let them know when they can reset their nickname.
 		embed := NewEmbed().
 			SetDescription(message +
@@ -558,15 +558,6 @@ func getTimeLeftForNick(s *discordgo.Session, authorID, guildID, channelID strin
 	return nil
 }
 
-// removeElementFromSlice removes element from slice
-func removeElementFromSlice(s []string, i int) []string {
-	if len(s) >= 1 {
-		s[i] = s[len(s)-1]
-		return s[:len(s)-1]
-	}
-	return s
-}
-
 func convertStringHexColorToInt(data string) (int, error) {
 	animeColor := strings.Replace(data, "#", "", -1)
 	animeColorHex, err := strconv.ParseInt(animeColor, 16, 64)
@@ -582,42 +573,39 @@ func convMonthIntToStr(year string) string {
 	switch year {
 	case "1":
 		year = "Jan"
-		break
 
 	case "2":
 		year = "Feb"
-		break
 
 	case "3":
 		year = "Mar"
-		break
+
 	case "4":
 		year = "Apr"
-		break
+
 	case "5":
 		year = "May"
-		break
+
 	case "6":
 		year = "Jun"
-		break
+
 	case "7":
 		year = "Jul"
-		break
+
 	case "8":
 		year = "Aug"
-		break
+
 	case "9":
 		year = "Sep"
-		break
+
 	case "10":
 		year = "Oct"
-		break
+
 	case "11":
 		year = "Nov"
-		break
+
 	case "12":
 		year = "Dec"
-		break
 	}
 	return year
 }
@@ -715,31 +703,22 @@ func cutDescription(description string) string {
 	switch amount {
 	case 0:
 		descriptionCut = "NULL"
-		break
 	case 1:
 		descriptionCut = strings.Join(split[0:1], ".")
-		break
 	case 2:
 		descriptionCut = strings.Join(split[0:2], ".")
-		break
 	case 3:
 		descriptionCut = strings.Join(split[0:3], ".")
-		break
 	case 4:
 		descriptionCut = strings.Join(split[0:4], ".")
-		break
 	case 5:
 		descriptionCut = strings.Join(split[0:5], ".")
-		break
 	case 6:
 		descriptionCut = strings.Join(split[0:6], ".")
-		break
 	case 7:
 		descriptionCut = strings.Join(split[0:7], ".")
-		break
 	default:
 		descriptionCut = strings.Join(split[0:8], ".") + "||"
-		break
 	}
 	// replace <br> with new line
 	descriptionCut = strings.Replace(descriptionCut, "<br>", "\n", -1)
