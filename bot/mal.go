@@ -101,7 +101,7 @@ func malAnime(s *discordgo.Session, m *discordgo.MessageCreate) {
 						}
 						// start embed
 						embed := NewEmbed().
-							SetTitle("More than one result found").
+							SetTitle("More than one result found (ANIME)").
 							SetDescription(strings.Join(animeList, "\n")).SetColor(green).MessageEmbed
 
 						_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
@@ -452,7 +452,7 @@ func malManga(s *discordgo.Session, m *discordgo.MessageCreate) {
 						}
 						// start embed
 						embed := NewEmbed().
-							SetTitle("More than one result found").
+							SetTitle("More than one result found (MANGA)").
 							SetDescription(strings.Join(mangaList, "\n")).SetColor(green).MessageEmbed
 
 						_, err = s.ChannelMessageSendEmbed(m.ChannelID, embed)
