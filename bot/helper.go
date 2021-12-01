@@ -358,7 +358,7 @@ func checkUserReactionSelect(page int, currentTime time.Time, botMessageID strin
 			page--
 			return page, nil
 		} else if checkReaction["Forward"] {
-			if page == 5 {
+			if page == 6 {
 				// remove user reactions before going to next page.
 				err := session.MessageReactionRemove(msgEvent.ChannelID, botMessageID, "▶️", msgEvent.Author.ID)
 				if err != nil {
@@ -382,7 +382,7 @@ func checkUserReactionSelect(page int, currentTime time.Time, botMessageID strin
 				log.Error("Failed to remove user reaction from bot message:", err)
 				return errorVal, err
 			}
-			page = 5
+			page = 6
 			return page, nil
 		}
 	}

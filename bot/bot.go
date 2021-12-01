@@ -76,6 +76,7 @@ func Start() {
 
 	// mal commands
 	goBot.AddHandler(malAnime)
+	goBot.AddHandler(malManga)
 
 	//miscellaneousCommands
 	//TODO:permissions Show your permissions or the member specified.

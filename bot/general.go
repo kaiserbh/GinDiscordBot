@@ -71,7 +71,7 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 								AddField("Invite", fmt.Sprintf("[Invite %s](https://discord.com/oauth2/authorize?"+
 									"client_id=854839186287493151&permissions=4228906231&scope=bot)", s.State.User.Username)).
 								AddField("Support Server", "[Gin Support](https://discord.gg/SD2D6Y8RaC)").
-								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
+								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/6)").
 								SetColor(green).MessageEmbed
 
 							// add reaction to the message author
@@ -113,7 +113,7 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 								AddField("prefix", "Change the prefix or view the current prefix.").
 								AddField("botchannel", "sets the current channel as bot channel or set multiple channel as bot channel.").
 								AddField("cooldown", "set duration for nickname changes in days").
-								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
+								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/6)").
 								SetColor(green).MessageEmbed
 
 							// add reaction to the message author
@@ -152,7 +152,7 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 								AddField("reset", "resets nickname (doesn't reset duration)").
 								AddField("invite", "Get a link to invite me.").
 								AddField("support", "Get a link to my support server.").
-								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
+								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/6)").
 								SetColor(green).MessageEmbed
 
 							// add reaction to the message author
@@ -183,12 +183,12 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 								SetTitle("Anilist").
 								SetThumbnail(botImage).
 								SetDescription(fmt.Sprintf("My default prefix is `%[1]s`. Use `%[1]shelp <command>` to get more information on a command.", guild.GuildPrefix)).
-								AddField("anime", "Query anime from Anilist").
-								AddField("manga", "Query manga from Anilist").
-								AddField("character", "Query character from Anilist").
-								AddField("staff", "Query person/staff from Anilist").
-								AddField("user", "Query user from Anilist").
-								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
+								AddField("anime | a", "Query anime from Anilist").
+								AddField("manga | m", "Query manga from Anilist").
+								AddField("character | c", "Query character from Anilist").
+								AddField("staff | s", "Query person/staff from Anilist").
+								AddField("user | u", "Query user from Anilist").
+								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/6)").
 								SetColor(green).MessageEmbed
 
 							// add reaction to the message author
@@ -216,13 +216,46 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 							currentTime := time.Now()
 							// start embed
 							embed := NewEmbed().
+								SetTitle("MyAnimeList").
+								SetThumbnail(botImage).
+								SetDescription(fmt.Sprintf("My default prefix is `%[1]s`. Use `%[1]shelp <command>` to get more information on a command.", guild.GuildPrefix)).
+								AddField("anime_mal | am", "Query anime from MAL").
+								AddField("manga_mal | mm", "Query manga from Anilist").
+								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/6)").
+								SetColor(green).MessageEmbed
+
+							// add reaction to the message author
+							_, err = s.ChannelMessageEditEmbed(m.ChannelID, botMessageID, embed)
+							if err != nil {
+								log.Error("Failed to send embed to the channel: ", err)
+								return
+							}
+							// gets bot Message ID
+							botMessageID, err := getBotMessageID(s, m)
+							if err != nil {
+								log.Error("Failed to get botID")
+								return
+							}
+
+							// execute checkUserReactionSelect basically while loop that checks or waits for user reaction
+							page, err = checkUserReactionSelect(page, currentTime, botMessageID, s, m)
+							if err != nil {
+								log.Error("Failed to check user select Reaction: ", err)
+								return
+							}
+						case 6:
+							previousAuthor = m.Author.ID
+							// get the time to check if it's idle or not
+							currentTime := time.Now()
+							// start embed
+							embed := NewEmbed().
 								SetTitle("Miscellaneous").
 								SetThumbnail(botImage).
 								SetDescription(fmt.Sprintf("My default prefix is `%[1]s`. Use `%[1]shelp <command>` to get more information on a command.", guild.GuildPrefix)).
 								AddField("permissions", "Show your permissions or the member specified.").
 								AddField("userinfo", "Show some information about yourself or the member specified.").
 								AddField("serverinfo", "Get some information about this server.").
-								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
+								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/6)").
 								SetColor(green).MessageEmbed
 							// add reaction to the message author
 							_, err = s.ChannelMessageEditEmbed(m.ChannelID, botMessageID, embed)
@@ -258,7 +291,7 @@ func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 								AddField("Invite", fmt.Sprintf("[Invite %s](https://discord.com/oauth2/authorize?"+
 									"client_id=854839186287493151&permissions=4228906231&scope=bot)", s.State.User.Username)).
 								AddField("Support Server", "[Gin Support](https://discord.gg/nkGvkUUqHZ)").
-								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/5)").
+								SetFooter("Use reactions to flip pages (Page " + strconv.Itoa(page) + "/6)").
 								SetColor(green).MessageEmbed
 
 							// add reaction to the message author
