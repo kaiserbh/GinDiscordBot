@@ -260,7 +260,7 @@ func malAnime(s *discordgo.Session, m *discordgo.MessageCreate) {
 							SetDescription(cutDescription(anime_list[chosen_anime].Synopsis)).
 							AddField("Format", anime_list[chosen_anime].MediaType).
 							AddField("Episodes", strconv.Itoa(anime_list[chosen_anime].NumEpisodes)).
-							AddField("Episode Duration", strconv.Itoa(anime_list[chosen_anime].AverageEpisodeDuration)+" seconds").
+							AddField("Episode Duration", strconv.Itoa(anime_list[chosen_anime].AverageEpisodeDuration/60)+" min").
 							AddField("Status", anime_list[chosen_anime].Status).
 							AddField("Start Date", anime_list[chosen_anime].StartDate).
 							AddField("End Date", anime_list[chosen_anime].EndDate).
@@ -345,7 +345,7 @@ func malAnime(s *discordgo.Session, m *discordgo.MessageCreate) {
 						SetDescription(cutDescription(anime_id.Synopsis)).
 						AddField("Format", anime_id.MediaType).
 						AddField("Episodes", strconv.Itoa(anime_id.NumEpisodes)).
-						AddField("Episode Duration", strconv.Itoa(anime_id.AverageEpisodeDuration/60)+" minutes").
+						AddField("Episode Duration", strconv.Itoa(anime_id.AverageEpisodeDuration/60)+" min").
 						AddField("Status", anime_id.Status).
 						AddField("Start Date", anime_id.StartDate).
 						AddField("End Date", anime_id.EndDate).
