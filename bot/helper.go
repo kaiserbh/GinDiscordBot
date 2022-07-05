@@ -698,9 +698,6 @@ func cutDescription(description string) string {
 	var re = regexp.MustCompile(`(?m)[!~]`)
 	description = re.ReplaceAllString(description, "|")
 
-	re = regexp.MustCompile(`(?m)[<br>]`)
-	description = re.ReplaceAllString(description, "|")
-
 	// replace <br> with new line
 	description = strings.Replace(description, "<br>", "\n", -1)
 
