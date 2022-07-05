@@ -3,6 +3,7 @@ package bot
 import (
 	"fmt"
 	"io/ioutil"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -689,39 +690,19 @@ func anilistAnimeData(media *anilistgo.Media) (string, string, string) {
 }
 
 func cutDescription(description string) string {
-	var split []string
-	if strings.Contains(description, "!~") {
-		split = strings.Split(description, "!~")
-	} else {
-		split = strings.Split(description, ".")
+	if len(description) > 200 {
+		description = description[:200]
+		description = description + "..."
 	}
+	// replace with spoiler tag.
+	var re = regexp.MustCompile(`(?m)[!~]`)
+	description = re.ReplaceAllString(description, "|")
 
-	amount := len(split)
+	re = regexp.MustCompile(`(?m)[<br>]`)
+	description = re.ReplaceAllString(description, "|")
 
-	var descriptionCut string
-
-	switch amount {
-	case 0:
-		descriptionCut = "NULL"
-	case 1:
-		descriptionCut = strings.Join(split[0:1], ".")
-	case 2:
-		descriptionCut = strings.Join(split[0:2], ".")
-	case 3:
-		descriptionCut = strings.Join(split[0:3], ".")
-	case 4:
-		descriptionCut = strings.Join(split[0:4], ".")
-	case 5:
-		descriptionCut = strings.Join(split[0:5], ".")
-	case 6:
-		descriptionCut = strings.Join(split[0:6], ".")
-	case 7:
-		descriptionCut = strings.Join(split[0:7], ".")
-	default:
-		descriptionCut = strings.Join(split[0:8], ".") + "||"
-	}
 	// replace <br> with new line
-	descriptionCut = strings.Replace(descriptionCut, "<br>", "\n", -1)
+	description = strings.Replace(description, "<br>", "\n", -1)
 
-	return descriptionCut
+	return description
 }

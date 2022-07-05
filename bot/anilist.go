@@ -1,12 +1,13 @@
 package bot
 
 import (
-	"github.com/bwmarrin/discordgo"
-	"github.com/kaiserbh/anilistgo"
-	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/kaiserbh/anilistgo"
+	log "github.com/sirupsen/logrus"
 )
 
 // anime query media from anilist by id or name.
@@ -79,7 +80,7 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 					averageScore := strconv.Itoa(anime.AverageScore) + "%"
 					meanScore := strconv.Itoa(anime.MeanScore) + "%"
-					popularity := strconv.Itoa(anime.Popularity)
+					// popularity := strconv.Itoa(anime.Popularity)
 
 					genres := strings.Join(anime.Genres, ",")
 					if genres == "" {
@@ -135,12 +136,12 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 						AddField("Status", anime.Status).
 						AddField("Start Date", startDate).
 						AddField("End Date", endDate).
-						AddField("Season", anime.Season).
+						// AddField("Season", anime.Season).
 						AddField("Average Score", averageScore).
 						AddField("Mean Score", meanScore).
-						AddField("Popularity", popularity).
-						AddField("Favourites", strconv.Itoa(anime.Favourites)).
-						AddField("Source", anime.Source).
+						// AddField("Popularity", popularity).
+						// AddField("Favourites", strconv.Itoa(anime.Favourites)).
+						// AddField("Source", anime.Source).
 						AddField("Genres", genres).
 						AddField("Studio", mainStudio).
 						SetFooter(anime.Title.Romaji, anime.CoverImage.ExtraLarge).
@@ -194,7 +195,7 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 					averageScore := strconv.Itoa(anime.AverageScore) + "%"
 					meanScore := strconv.Itoa(anime.MeanScore) + "%"
-					popularity := strconv.Itoa(anime.Popularity)
+					// popularity := strconv.Itoa(anime.Popularity)
 
 					genres := strings.Join(anime.Genres, ",")
 					if genres == "" {
@@ -238,12 +239,12 @@ func anime(s *discordgo.Session, m *discordgo.MessageCreate) {
 						AddField("Status", anime.Status).
 						AddField("Start Date", startDate).
 						AddField("End Date", endDate).
-						AddField("Season", anime.Season).
+						// AddField("Season", anime.Season).
 						AddField("Average Score", averageScore).
 						AddField("Mean Score", meanScore).
-						AddField("Popularity", popularity).
-						AddField("Favourites", strconv.Itoa(anime.Favourites)).
-						AddField("Source", anime.Source).
+						// AddField("Popularity", popularity).
+						// AddField("Favourites", strconv.Itoa(anime.Favourites)).
+						// AddField("Source", anime.Source).
 						AddField("Genres", genres).
 						AddField("Studio", mainStudio).
 						SetFooter(anime.Title.Romaji, anime.CoverImage.ExtraLarge).
@@ -375,9 +376,9 @@ func manga(s *discordgo.Session, m *discordgo.MessageCreate) {
 						AddField("End Date", endDate).
 						AddField("Average Score", strconv.Itoa(manga.AverageScore)+"%").
 						AddField("Mean Score", strconv.Itoa(manga.MeanScore)+"%").
-						AddField("Popularity", strconv.Itoa(manga.Popularity)).
-						AddField("Favourites", strconv.Itoa(manga.Favourites)).
-						AddField("Source", manga.Source).
+						// AddField("Popularity", strconv.Itoa(manga.Popularity)).
+						// AddField("Favourites", strconv.Itoa(manga.Favourites)).
+						// AddField("Source", manga.Source).
 						AddField("Genres", genres).
 						SetFooter(manga.Title.Romaji, manga.CoverImage.ExtraLarge).
 						InlineAllFields().
@@ -454,9 +455,9 @@ func manga(s *discordgo.Session, m *discordgo.MessageCreate) {
 						AddField("End Date", endDate).
 						AddField("Average Score", strconv.Itoa(manga.AverageScore)+"%").
 						AddField("Mean Score", strconv.Itoa(manga.MeanScore)+"%").
-						AddField("Popularity", strconv.Itoa(manga.Popularity)).
-						AddField("Favourites", strconv.Itoa(manga.Favourites)).
-						AddField("Source", manga.Source).
+						// AddField("Popularity", strconv.Itoa(manga.Popularity)).
+						// AddField("Favourites", strconv.Itoa(manga.Favourites)).
+						// AddField("Source", manga.Source).
 						AddField("Genres", genres).
 						SetFooter(manga.Title.Romaji, manga.CoverImage.ExtraLarge).
 						InlineAllFields().
@@ -556,10 +557,7 @@ func character(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 					description := character.Description
 
-					checkSpoiler := strings.Replace(description, "~!", "||", -1)
-					cleanEndSpoiler := strings.Replace(checkSpoiler, "!~", "||", -1)
-
-					description = cutDescription(cleanEndSpoiler)
+					description = cutDescription(description)
 
 					if character.Age == "" {
 						character.Age = "\u200b"
@@ -638,10 +636,7 @@ func character(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 					description := character.Description
 
-					checkSpoiler := strings.Replace(description, "~!", "||", -1)
-					cleanEndSpoiler := strings.Replace(checkSpoiler, "!~", "||", -1)
-
-					description = cutDescription(cleanEndSpoiler)
+					description = cutDescription(description)
 
 					if character.Age == "" {
 						character.Age = "\u200b"
