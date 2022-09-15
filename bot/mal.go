@@ -257,18 +257,18 @@ func malAnime(s *discordgo.Session, m *discordgo.MessageCreate) {
 							SetURL("https://myanimelist.net/anime/"+strconv.Itoa(anime_list[chosen_anime].ID)).
 							SetAuthor("MAL", "https://upload.wikimedia.org/wikipedia/commons/7/7a/MyAnimeList_Logo.png").
 							SetThumbnail(anime_list[chosen_anime].MainPicture.Large).
-							SetDescription(anime_list[chosen_anime].Synopsis).
+							SetDescription(cutDescription(anime_list[chosen_anime].Synopsis)).
 							AddField("Format", anime_list[chosen_anime].MediaType).
 							AddField("Episodes", strconv.Itoa(anime_list[chosen_anime].NumEpisodes)).
-							AddField("Episode Duration", strconv.Itoa(anime_list[chosen_anime].AverageEpisodeDuration)+" seconds").
+							AddField("Episode Duration", strconv.Itoa(anime_list[chosen_anime].AverageEpisodeDuration/60)+" min").
 							AddField("Status", anime_list[chosen_anime].Status).
 							AddField("Start Date", anime_list[chosen_anime].StartDate).
 							AddField("End Date", anime_list[chosen_anime].EndDate).
-							AddField("Season", anime_list[chosen_anime].StartSeason.Season).
+							//AddField("Season", anime_list[chosen_anime].StartSeason.Season).
 							AddField("Mean Score", strconv.FormatFloat(anime_list[chosen_anime].Mean, 'f', 3, 64)).
-							AddField("Popularity", strconv.Itoa(anime_list[chosen_anime].Popularity)).
-							AddField("Rank", strconv.Itoa(anime_list[chosen_anime].Rank)).
-							AddField("Source", anime_list[chosen_anime].Source).
+							//AddField("Popularity", strconv.Itoa(anime_list[chosen_anime].Popularity)).
+							//AddField("Rank", strconv.Itoa(anime_list[chosen_anime].Rank)).
+							//AddField("Source", anime_list[chosen_anime].Source).
 							AddField("Genres", genres_join).
 							AddField("Studio", studios_join).
 							SetFooter(anime_list[chosen_anime].AlternativeTitles.Ja, anime_list[chosen_anime].MainPicture.Medium).
@@ -342,18 +342,18 @@ func malAnime(s *discordgo.Session, m *discordgo.MessageCreate) {
 						SetURL("https://myanimelist.net/anime/"+strconv.Itoa(anime_id.ID)).
 						SetAuthor("MAL", "https://upload.wikimedia.org/wikipedia/commons/7/7a/MyAnimeList_Logo.png").
 						SetThumbnail(anime_id.MainPicture.Large).
-						SetDescription(anime_id.Synopsis).
+						SetDescription(cutDescription(anime_id.Synopsis)).
 						AddField("Format", anime_id.MediaType).
 						AddField("Episodes", strconv.Itoa(anime_id.NumEpisodes)).
-						AddField("Episode Duration", strconv.Itoa(anime_id.AverageEpisodeDuration)+" seconds").
+						AddField("Episode Duration", strconv.Itoa(anime_id.AverageEpisodeDuration/60)+" min").
 						AddField("Status", anime_id.Status).
 						AddField("Start Date", anime_id.StartDate).
 						AddField("End Date", anime_id.EndDate).
-						AddField("Season", anime_id.StartSeason.Season).
+						//AddField("Season", anime_id.StartSeason.Season).
 						AddField("Mean Score", strconv.FormatFloat(anime_id.Mean, 'f', 3, 64)).
-						AddField("Popularity", strconv.Itoa(anime_id.Popularity)).
-						AddField("Rank", strconv.Itoa(anime_id.Rank)).
-						AddField("Source", anime_id.Source).
+						//AddField("Popularity", strconv.Itoa(anime_id.Popularity)).
+						//AddField("Rank", strconv.Itoa(anime_id.Rank)).
+						//AddField("Source", anime_id.Source).
 						AddField("Genres", genres_join).
 						AddField("Studio", studios_join).
 						SetFooter(anime_id.AlternativeTitles.Ja, anime_id.MainPicture.Medium).
@@ -365,14 +365,6 @@ func malAnime(s *discordgo.Session, m *discordgo.MessageCreate) {
 						log.Error("Failed to send embed to the channel: ", err)
 						return
 					}
-
-					// botMessageID, err := getBotMessageID(s, m)
-					// if err != nil {
-					// 	log.Error("Failed to get bot message ID: ", err)
-					// 	return
-					// }
-					// // check timer and reaction
-					// checkAnilistTimer(s, m.ChannelID, botMessageID, m.Author.ID)
 
 				}
 			}
@@ -603,15 +595,15 @@ func malManga(s *discordgo.Session, m *discordgo.MessageCreate) {
 							SetURL("https://myanimelist.net/manga/"+strconv.Itoa(manga_list[chosen_manga].ID)).
 							SetAuthor("MAL", "https://upload.wikimedia.org/wikipedia/commons/7/7a/MyAnimeList_Logo.png").
 							SetThumbnail(manga_list[chosen_manga].MainPicture.Large).
-							SetDescription(manga_list[chosen_manga].Synopsis[:]).
+							SetDescription(cutDescription(manga_list[chosen_manga].Synopsis[:])).
 							AddField("Type", manga_list[chosen_manga].MediaType).
 							AddField("Volumes", strconv.Itoa(manga_list[chosen_manga].NumVolumes)).
 							AddField("Chapters", strconv.Itoa(manga_list[chosen_manga].NumChapters)).
 							AddField("Status", manga_list[chosen_manga].Status).
 							AddField("Published", manga_list[chosen_manga].StartDate).
 							AddField("Mean Score", strconv.FormatFloat(manga_list[chosen_manga].Mean, 'f', 3, 64)).
-							AddField("Popularity", strconv.Itoa(manga_list[chosen_manga].Popularity)).
-							AddField("Rank", strconv.Itoa(manga_list[chosen_manga].Rank)).
+							//AddField("Popularity", strconv.Itoa(manga_list[chosen_manga].Popularity)).
+							//AddField("Rank", strconv.Itoa(manga_list[chosen_manga].Rank)).
 							AddField("Genres", genres_join).
 							AddField("NSFW", nsfw_string).
 							SetFooter(manga_list[chosen_manga].AlternativeTitles.Ja, manga_list[chosen_manga].MainPicture.Medium).
@@ -623,14 +615,6 @@ func malManga(s *discordgo.Session, m *discordgo.MessageCreate) {
 							log.Error("Failed to send embed to the channel: ", err)
 							return
 						}
-
-						// botMessageID, err = getBotMessageID(s, m)
-						// if err != nil {
-						// 	log.Error("Failed to get bot message ID: ", err)
-						// 	return
-						// }
-						// // check timer and reaction
-						// checkAnilistTimer(s, m.ChannelID, botMessageID, m.Author.ID)
 
 					}
 				} else {
@@ -681,15 +665,15 @@ func malManga(s *discordgo.Session, m *discordgo.MessageCreate) {
 						SetURL("https://myanimelist.net/manga/"+strconv.Itoa(manga.ID)).
 						SetAuthor("MAL", "https://upload.wikimedia.org/wikipedia/commons/7/7a/MyAnimeList_Logo.png").
 						SetThumbnail(manga.MainPicture.Large).
-						SetDescription(manga.Synopsis[:]).
+						SetDescription(cutDescription(manga.Synopsis[:])).
 						AddField("Type", manga.MediaType).
 						AddField("Volumes", strconv.Itoa(manga.NumVolumes)).
 						AddField("Chapters", strconv.Itoa(manga.NumChapters)).
 						AddField("Status", manga.Status).
 						AddField("Published", manga.StartDate).
 						AddField("Mean Score", strconv.FormatFloat(manga.Mean, 'f', 3, 64)).
-						AddField("Popularity", strconv.Itoa(manga.Popularity)).
-						AddField("Rank", strconv.Itoa(manga.Rank)).
+						//AddField("Popularity", strconv.Itoa(manga.Popularity)).
+						//AddField("Rank", strconv.Itoa(manga.Rank)).
 						AddField("Genres", genres_join).
 						AddField("NSFW", nsfw_string).
 						SetFooter(manga.AlternativeTitles.Ja, manga.MainPicture.Medium).
