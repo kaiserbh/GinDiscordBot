@@ -76,6 +76,27 @@ func Start() {
 		}
 	})
 
+	s.Identify.Presence = discordgo.GatewayStatusUpdate{
+		Game: discordgo.Activity{
+			Name:          "Using Slash Command Now",
+			Type:          0,
+			URL:           "",
+			CreatedAt:     time.Now(),
+			ApplicationID: "",
+			State:         "",
+			Details:       "Okay I don't know anymore",
+			Timestamps:    discordgo.TimeStamps{},
+			Emoji:         discordgo.Emoji{},
+			Party:         discordgo.Party{},
+			Assets:        discordgo.Assets{},
+			Secrets:       discordgo.Secrets{},
+			Instance:      false,
+			Flags:         1,
+		},
+		Status: "Just testing ya know",
+		AFK:    true,
+	}
+
 	err = s.Open()
 	if err != nil {
 		log.Fatalf("Cannot open the session: %v", err)
