@@ -148,7 +148,7 @@ var (
 				})
 			} else if option, ok := optionMap["id"]; ok {
 				margs = append(margs, option.IntValue())
-				log.Debug("Entered Integer for Anime Anilist: ", option.StringValue())
+				log.Debug("Entered Integer for Anime Anilist: ", option.IntValue())
 				anilistAnime, err := anilistQueryAnimeByID(int(option.IntValue()))
 				if err != nil {
 					s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
