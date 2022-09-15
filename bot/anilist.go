@@ -784,7 +784,7 @@ func staff(s *discordgo.Session, m *discordgo.MessageCreate) {
 						primaryOccupation = strings.Join(staff.PrimaryOccupations, ", ")
 					}
 
-					// if staff.HomeTown is empty then just send empty string.
+					// if staff HomeTown is empty then just send empty string.
 					if staff.HomeTown == "" {
 						staff.HomeTown = "\u200b"
 					}
@@ -889,7 +889,7 @@ func staff(s *discordgo.Session, m *discordgo.MessageCreate) {
 						primaryOccupation = strings.Join(staff.PrimaryOccupations, ", ")
 					}
 
-					// if staff.HomeTown is empty then just send empty string.
+					// if staff  HomeTown is empty then just send empty string.
 					if staff.HomeTown == "" {
 						staff.HomeTown = "\u200b"
 					}

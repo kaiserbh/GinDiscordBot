@@ -10,7 +10,6 @@ import (
 	"github.com/kaiserbh/anilistgo"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/c9s/goprocinfo/linux"
 	"github.com/kaiserbh/gin-bot-go/model"
 	log "github.com/sirupsen/logrus"
 )
@@ -142,7 +141,7 @@ func getAllBotMessagesID(session *discordgo.Session, msgEvent *discordgo.Message
 	return botMessagesID, nil
 }
 
-//checkMessageReactionAuthor check reactions for help menu
+// checkMessageReactionAuthor check reactions for help menu
 func checkMessageReactionAuthor(session *discordgo.Session, channelID, botMessageID, emojiID, authorID string, limit int) (bool, error) {
 	checkReaction, err := session.MessageReactions(channelID, botMessageID, emojiID, limit, botMessageID, "")
 	if err != nil {
@@ -157,7 +156,7 @@ func checkMessageReactionAuthor(session *discordgo.Session, channelID, botMessag
 	return false, nil
 }
 
-//checkHelpMenuReactions check reactions for help menu
+// checkHelpMenuReactions check reactions for help menu
 func checkHelpMenuReactions(session *discordgo.Session, msgEvent *discordgo.MessageCreate, botMessageID string) (map[string]bool, error) {
 
 	checkReaction, err := session.MessageReactions(msgEvent.ChannelID, botMessageID, "⏮️", 10, botMessageID, "")
@@ -432,24 +431,24 @@ func getCpuUsage() (string, error) {
 	return convertToString + "%", nil
 }
 
-func getMemInfo() (string, error) {
-	memInfo, err := linux.ReadMemInfo("/proc/meminfo")
-	if err != nil {
-		log.Error("Failed to Read memory info: ", err)
-		return "", err
-	}
-
-	// it's in kB (Kilo Byte) convert to Gigabyte
-	memoryAvailable := memInfo.MemAvailable
-	memoryFree := memInfo.MemFree
-
-	// memory used and convert to MiB
-	memoryUsed := float64(memoryAvailable-memoryFree) / float64(memoryAvailable) * 100
-
-	convertToString := strconv.FormatFloat(memoryUsed, 'f', 2, 64)
-
-	return convertToString + "%", nil
-}
+//func getMemInfo() (string, error) {
+//	memInfo, err := linux.ReadMemInfo("/proc/meminfo")
+//	if err != nil {
+//		log.Error("Failed to Read memory info: ", err)
+//		return "", err
+//	}
+//
+//	// it's in kB (Kilo Byte) convert to Gigabyte
+//	memoryAvailable := memInfo.MemAvailable
+//	memoryFree := memInfo.MemFree
+//
+//	// memory used and convert to MiB
+//	memoryUsed := float64(memoryAvailable-memoryFree) / float64(memoryAvailable) * 100
+//
+//	convertToString := strconv.FormatFloat(memoryUsed, 'f', 2, 64)
+//
+//	return convertToString + "%", nil
+//}
 
 func getTimeLeftForNick(s *discordgo.Session, authorID, guildID, channelID string, message string) error {
 	// get guild info from DB
