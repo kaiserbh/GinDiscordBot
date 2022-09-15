@@ -12,7 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//helpMessageHandler help menu
+// helpMessageHandler help menu
 func helpMessageHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Checks if the message has prefix from the database.
 	guild, err := db.FindGuildByID(m.GuildID)
@@ -402,10 +402,10 @@ func stats(s *discordgo.Session, m *discordgo.MessageCreate) {
 					log.Error("Failed to get CPU Usage: ", err)
 				}
 
-				memUsage, err := getMemInfo()
-				if err != nil {
-					return
-				}
+				//memUsage, err := getMemInfo()
+				//if err != nil {
+				//	return
+				//}
 
 				// start embed
 				embed := NewEmbed().
@@ -420,7 +420,7 @@ func stats(s *discordgo.Session, m *discordgo.MessageCreate) {
 						uptimeSeconds, "s")).
 					AddField("Servers", fmt.Sprintf("%d", numberOfGuildIn)).
 					AddField("CPU Usage", cpuUsage).
-					AddField("RAM Usage", memUsage).
+					//AddField("RAM Usage", memUsage).
 					AddField("Go Version", fmt.Sprintf("%v", goVer)).
 					InlineAllFields().
 					SetColor(green).MessageEmbed
