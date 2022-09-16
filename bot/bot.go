@@ -64,8 +64,14 @@ func Start() {
 		log.Infof("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
 	})
 
+	//s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	//	if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
+	//		h(s, i)
+	//	}
+	//})
+
 	s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
+		if h, ok := malCommandHandlers[i.ApplicationCommandData().Name]; ok {
 			h(s, i)
 		}
 	})
@@ -104,16 +110,17 @@ func Start() {
 
 	log.Info("Adding commands")
 
-	//registeredCommands := make([]*discordgo.ApplicationCommand, len(commands))
-	//for i, v := range commands {
-	//	cmd, err := s.ApplicationCommandCreate(s.State.User.ID, *GuildID, v)
-	//	if err != nil {
-	//		log.Panicf("Cannot create '%v' command: %v", v.Name, err)
-	//	}
-	//	registeredCommands[i] = cmd
-	//}
-	//TODO:MalSlashCommandsAdd
-	//TODO:GeneralSlashCommandsAdd
+	// MAl
+	malRegisteredCommands := make([]*discordgo.ApplicationCommand, len(malCommands))
+	for i, v := range malCommands {
+		cmd, err := s.ApplicationCommandCreate(s.State.User.ID, *GuildID, v)
+		if err != nil {
+			log.Panicf("Cannot create '%v' command: %v", v.Name, err)
+		}
+		malRegisteredCommands[i] = cmd
+	}
+
+	//TODO:GeneralSlashCommandsAdd (Maybe)
 	anilistRegisteredCommands := make([]*discordgo.ApplicationCommand, len(alCommands))
 	for i, v := range alCommands {
 		cmd, err := s.ApplicationCommandCreate(s.State.User.ID, *GuildID, v)
@@ -136,12 +143,24 @@ func Start() {
 		// // We are doing this from the returned commands on line 375, because using
 		// // this will delete all the commands, which might not be desirable, so we
 		// // are deleting only the commands that we added.
-		anilistRegisteredCommands, err := s.ApplicationCommands(s.State.User.ID, *GuildID)
-		if err != nil {
-			log.Fatalf("Could not fetch registered commands: %v", err)
-		}
+		//anilistRegisteredCommands, err := s.ApplicationCommands(s.State.User.ID, *GuildID)
+		//if err != nil {
+		//	log.Fatalf("Could not fetch registered commands: %v", err)
+		//}
+		//
+		//malRegisteredCommands, err := s.ApplicationCommands(s.State.User.ID, *GuildID)
+		//if err != nil {
+		//	log.Fatalf("Could not fetch registered commands: %v", err)
+		//}
 
 		for _, v := range anilistRegisteredCommands {
+			err := s.ApplicationCommandDelete(s.State.User.ID, *GuildID, v.ID)
+			if err != nil {
+				log.Panicf("Cannot delete '%v' command: %v", v.Name, err)
+			}
+		}
+
+		for _, v := range malRegisteredCommands {
 			err := s.ApplicationCommandDelete(s.State.User.ID, *GuildID, v.ID)
 			if err != nil {
 				log.Panicf("Cannot delete '%v' command: %v", v.Name, err)
@@ -150,58 +169,6 @@ func Start() {
 	}
 
 	log.Println("Gracefully shutting down.")
-
-	//id, err := goBot.User("@me")
-	//log.Debug("BotID" + id.ID)
-	//if err != nil {
-	//	log.Fatal("Couldn't get botID:  ", err)
-	//}
-
-	//// intent or what to store for bot?
-	//goBot.Identify.Intents = discordgo.IntentsAll
-	//
-	//// Register handlers here.
-	//goBot.AddHandler(guildJoinInit)
-	//goBot.AddHandler(MessageCreate)
-	//
-	//// configurationCommands
-	//goBot.AddHandler(setPrefixHandler)
-	//goBot.AddHandler(setBotChannelHandler)
-	//goBot.AddHandler(setNicknameCooldown)
-	//
-	//// generalCommands
-	//go goBot.AddHandler(helpMessageHandler)
-	//goBot.AddHandler(pingLatency)
-	//goBot.AddHandler(stats)
-	//goBot.AddHandler(setNick)
-	//goBot.AddHandler(resetNickHandler)
-	//goBot.AddHandler(botPing)
-	//goBot.AddHandler(invite)
-	//
-	//// anilistCommands
-	//goBot.AddHandler(anime)
-	//goBot.AddHandler(manga)
-	//goBot.AddHandler(character)
-	//goBot.AddHandler(staff)
-	//goBot.AddHandler(user)
-	//
-	//// mal commands
-	//goBot.AddHandler(malAnime)
-	//goBot.AddHandler(malManga)
-	//
-	////miscellaneousCommands
-	////TODO:permissions Show your permissions or the member specified.
-	////TODO:userinfo Show some information about yourself or the member specified.
-	////TODO:serverinfo Get some information about this server.
-	//
-	//// Start bot with chan.
-	//err = goBot.Open()
-	//if err != nil {
-	//	log.Fatal("Couldn't Connect bot:  ", err)
-	//	return
-	//}
-	//
-	//log.Info("Bot is running")
 }
 
 // guildJoinInit runs whenever it joins a new guild or gets online.
