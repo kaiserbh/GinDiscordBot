@@ -13,7 +13,7 @@ var (
 	malCommands = []*discordgo.ApplicationCommand{
 		{
 			Name:        "mal-anime",
-			Description: "Search MyAnimeList by anime title or id",
+			Description: "Search anime from MyAnimeList by title or id",
 			Options: []*discordgo.ApplicationCommandOption{
 
 				{
@@ -49,7 +49,7 @@ var (
 
 		{
 			Name:        "mal-manga",
-			Description: "Search Anilist by manga title or id",
+			Description: "Search manga from MyAnimeList by title or id",
 			Options: []*discordgo.ApplicationCommandOption{
 
 				{
